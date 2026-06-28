@@ -1,0 +1,3381 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIP Console – Zone Greater India</title>
+<style>
+  :root {
+    /* Schneider Electric Color Theme */
+    --navy: #007A3D;          /* Dark Green — header/nav background */
+    --navy-mid: #005C2E;      /* Deeper Dark Green — gradient pair */
+    --blue: #0072CE;          /* Info Blue — info indicators, focus */
+    --blue-light: #3399E0;    /* Lighter Info Blue — hover states */
+    --accent: #F5A623;        /* Warning Orange — alerts, accents */
+    --accent-soft: #FEF3DC;   /* Soft orange tint */
+    --green: #00A651;         /* Schneider Green — primary actions */
+    --green-light: #6CC24A;   /* Light Green — secondary KPIs */
+    --green-soft: #E6F7ED;    /* Very light green tint */
+    --red: #D0021B;           /* Error Red — critical alerts */
+    --red-soft: #FDEAED;      /* Soft red tint */
+    --gray-100: #F4F4F4;      /* Card Background Light Grey */
+    --gray-200: #D9D9D9;      /* Borders Medium Grey */
+    --gray-300: #C0C0C0;      /* Mid-light grey */
+    --gray-400: #7A7A7A;      /* Secondary Text Soft Grey */
+    --gray-600: #4A4A4A;      /* Neutral Chart / Mid text */
+    --gray-800: #333333;      /* Primary Text Dark Grey */
+    --white: #FFFFFF;         /* Page Background */
+    --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+  }
+ 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    font-family: var(--font-sans);
+    background: var(--gray-100);
+    color: var(--gray-800);
+    min-height: 100vh;
+  }
+ 
+  /* ── NAV ── */
+  .top-nav {
+    background: #00A651; /* Schneider Green — per brand guidelines */
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .nav-brand .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-tab {
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    font-family: var(--font-sans);
+  }
+  .nav-tab.client { background: transparent; color: var(--gray-400); }
+  .nav-tab.client:hover { background: rgba(255,255,255,0.12); color: var(--white); }
+  .nav-tab.client.active { background: var(--green); color: var(--white); }
+  .nav-tab.reports { background: transparent; color: var(--gray-400); }
+  .nav-tab.reports:hover { background: rgba(255,255,255,0.12); color: var(--white); }
+  .nav-tab.reports.active { background: var(--green-light); color: var(--white); }
+  .nav-tab.admin { background: rgba(245,166,35,0.15); color: var(--accent); border: 1px solid rgba(245,166,35,0.3); }
+  .nav-tab.admin:hover { background: rgba(245,166,35,0.25); }
+  .nav-tab.admin.active { background: var(--accent); color: var(--navy); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .sync-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--green-light);
+    background: rgba(0,166,81,0.15);
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid rgba(0,166,81,0.3);
+  }
+  .sync-badge .dot { width:6px;height:6px;border-radius:50%;background:var(--green-light); }
+ 
+  /* ── PAGES ── */
+  .page { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .page.active { display: block; }
+ 
+  /* ── LOGIN OVERLAY ── */
+  .login-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,92,46,0.88);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .login-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 40px;
+    width: 360px;
+    box-shadow: var(--shadow-lg);
+  }
+  .login-card h2 { font-size: 20px; color: var(--navy); margin-bottom: 6px; }
+  .login-card p { font-size: 13px; color: var(--gray-600); margin-bottom: 28px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 14px; font-family: var(--font-sans);
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus { border-color: var(--green); }
+  .btn-primary {
+    width: 100%; padding: 11px;
+    background: var(--green); color: var(--white);
+    border: none; border-radius: var(--radius);
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+    font-family: var(--font-sans);
+  }
+  .btn-primary:hover { background: var(--navy); }
+  .login-error { color: var(--red); font-size: 12px; margin-top: 10px; text-align: center; }
+ 
+  /* ── CARDS ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-header h3 { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+  .card-header .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500;
+  }
+  .card-body { padding: 20px; }
+ 
+  /* ── PAGE HEADER ── */
+  .page-header {
+    background: linear-gradient(135deg, #00A651 0%, #007A3D 100%);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    color: var(--white);
+  }
+  .page-header .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; }
+  .page-header p { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+  .page-header .meta { margin-top: 16px; display: flex; gap: 24px; flex-wrap: wrap; }
+  .page-header .meta-item { font-size: 12px; color: rgba(255,255,255,0.55); }
+  .page-header .meta-item span { color: var(--accent); font-weight: 600; }
+ 
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  @media(max-width:768px) { .grid-2,.grid-3 { grid-template-columns:1fr; } #reportAllCurves { grid-template-columns:1fr !important; } }
+ 
+  /* ── FORM ELEMENTS ── */
+  .field-group { margin-bottom: 18px; }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .field-label .required { color: var(--green); font-size: 10px; }
+  .field-label .optional { color: var(--gray-400); font-size: 10px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  select, input[type="number"], input[type="text"] {
+    width: 100%; padding: 9px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 13px; font-family: var(--font-sans);
+    color: var(--gray-800); background: var(--white);
+    outline: none; transition: border-color 0.15s;
+  }
+  select:focus, input[type="number"]:focus, input[type="text"]:focus { border-color: var(--green); }
+  .field-hint { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+ 
+  /* ── KPI TABLE ── */
+  .kpi-table { width: 100%; border-collapse: collapse; }
+  .kpi-table th {
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--gray-600); padding: 10px 12px;
+    background: var(--gray-100); border-bottom: 1px solid var(--gray-200);
+    text-align: left;
+  }
+  .kpi-table td { padding: 10px 12px; border-bottom: 1px solid var(--gray-200); font-size: 13px; vertical-align: middle; }
+  .kpi-table tr:last-child td { border-bottom: none; }
+  .kpi-table input { padding: 6px 10px; font-size: 13px; }
+  .kpi-table .weight-pill {
+    display: inline-block; padding: 2px 8px;
+    background: rgba(108,194,74,0.15); color: #005C2E;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .kpi-table .curve-tag {
+    display: inline-block; padding: 2px 8px;
+    background: rgba(0,114,206,0.12); color: #0072CE;
+    border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+ 
+  /* ── RESULT BOX ── */
+  .result-box {
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    text-align: center;
+  }
+  .result-box .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; margin-bottom: 6px; }
+  .result-box .amount { font-size: 32px; font-weight: 700; font-family: var(--font-mono); letter-spacing: -1px; }
+  .result-box .sub { font-size: 12px; opacity: 0.65; margin-top: 4px; }
+  .result-target { background: rgba(0,114,206,0.08); color: var(--blue); border: 1px solid rgba(0,114,206,0.25); }
+  .result-payout { background: var(--green-soft); color: var(--navy); border: 1px solid rgba(0,166,81,0.3); }
+  .result-payout.zero { background: var(--gray-100); color: var(--gray-600); border-color: var(--gray-200); }
+ 
+  /* ── PAYOUT FACTOR ── */
+  .factor-display {
+    margin-top: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1.5px solid var(--gray-200);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  .factor-display-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px 14px;
+    background: linear-gradient(135deg, #00A651 0%, #007A3D 100%);
+  }
+  .factor-display-left { display: flex; align-items: center; gap: 20px; }
+  .factor-display-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.15);
+  }
+  .factor-display-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    color: rgba(255,255,255,0.5); margin-bottom: 4px; font-weight: 600;
+  }
+  .factor-number {
+    font-size: 44px; font-weight: 800; font-family: var(--font-mono);
+    color: var(--white); line-height: 1; letter-spacing: -2px;
+    transition: color 0.3s;
+  }
+  .factor-status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+    background: rgba(255,255,255,0.12); color: var(--white);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    white-space: nowrap;
+  }
+  .factor-status-pill.good   { background: rgba(0,166,81,0.25);   border-color: rgba(0,166,81,0.5);   color: #6CC24A; }
+  .factor-status-pill.great  { background: rgba(0,122,61,0.25);   border-color: rgba(0,122,61,0.5);   color: #A8DFBC; }
+  .factor-status-pill.max    { background: rgba(245,166,35,0.25);  border-color: rgba(245,166,35,0.5);  color: #FCD34D; }
+  .factor-status-pill.capped { background: rgba(208,2,27,0.20);   border-color: rgba(208,2,27,0.4);   color: #FF8A96; }
+  .factor-status-pill.zero   { background: rgba(122,122,122,0.15);border-color: rgba(122,122,122,0.3);color: rgba(255,255,255,0.4); }
+ 
+  .factor-display-body { padding: 16px 24px 20px; background: var(--white); }
+ 
+  .factor-bar-wrap { position: relative; }
+  .factor-bar-bg {
+    height: 12px; background: var(--gray-100);
+    border-radius: 6px; overflow: visible; position: relative;
+    border: 1px solid var(--gray-200);
+  }
+  .factor-bar-fill {
+    height: 100%; border-radius: 6px;
+    background: linear-gradient(90deg, var(--navy), var(--green));
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.3s;
+    position: relative;
+  }
+  .factor-bar-fill.capped { background: linear-gradient(90deg, var(--accent), var(--red)); }
+  .factor-bar-fill.great  { background: linear-gradient(90deg, var(--green), var(--green-light)); }
+  .factor-bar-fill.max    { background: linear-gradient(90deg, var(--green-light), var(--green)); }
+ 
+  /* Milestone ticks */
+  .factor-milestones {
+    display: flex; justify-content: space-between;
+    padding: 6px 0 0; position: relative;
+  }
+  .factor-milestone {
+    display: flex; flex-direction: column; align-items: center;
+    font-size: 10px; color: var(--gray-400); font-weight: 600;
+    position: absolute; transform: translateX(-50%);
+  }
+  .factor-milestone .tick {
+    width: 1px; height: 6px; background: var(--gray-300); margin-bottom: 2px;
+  }
+  .factor-milestone.active { color: var(--green); }
+  .factor-milestone.active .tick { background: var(--green); }
+ 
+  .factor-label {
+    font-size: 12px; color: var(--gray-600); margin-top: 12px;
+    display: flex; align-items: center; gap: 6px; font-weight: 500;
+  }
+  .factor-label .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: var(--green);
+  }
+  .factor-label .dot.orange { background: var(--accent); }
+  .factor-label .dot.gray   { background: var(--gray-300); }
+ 
+  /* Raw vs applicable split */
+  .factor-split {
+    display: flex; gap: 0; margin-top: 14px;
+    border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden;
+  }
+  .factor-split-item {
+    flex: 1; padding: 10px 14px; text-align: center;
+    border-right: 1px solid var(--gray-200);
+  }
+  .factor-split-item:last-child { border-right: none; }
+  .factor-split-item .fs-label {
+    font-size: 10px; color: var(--gray-400); text-transform: uppercase;
+    letter-spacing: 0.5px; font-weight: 600; margin-bottom: 3px;
+  }
+  .factor-split-item .fs-val {
+    font-size: 18px; font-weight: 700; font-family: var(--font-mono); color: var(--navy);
+  }
+  .factor-split-item.highlight { background: var(--green-soft); }
+  .factor-split-item.highlight .fs-val { color: var(--navy); }
+ 
+  /* ── NOTICE ── */
+  .notice {
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .notice.info { background: rgba(0,114,206,0.07); color: #004E8F; border-left: 3px solid var(--blue); }
+  .notice.warning { background: var(--accent-soft); color: #7A4700; border-left: 3px solid var(--accent); }
+  .notice .icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+ 
+  /* ── MASTER NAV CARDS ── */
+  .master-nav-card {
+    display: flex; flex-direction: column; align-items: flex-start;
+    gap: 6px; padding: 16px 18px;
+    background: var(--white); border-radius: 10px;
+    border: 2px solid var(--gray-200);
+    cursor: pointer; transition: all 0.18s;
+    font-family: var(--font-sans); text-align: left;
+    box-shadow: var(--shadow);
+  }
+  .master-nav-card:hover {
+    border-color: var(--green-light);
+    box-shadow: 0 4px 14px rgba(0,166,81,0.12);
+    transform: translateY(-1px);
+  }
+  .master-nav-card.active {
+    border-color: var(--green);
+    background: var(--green-soft);
+    box-shadow: 0 4px 16px rgba(0,166,81,0.18);
+  }
+  .master-nav-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0; margin-bottom: 2px;
+  }
+  .master-nav-label {
+    font-size: 13px; font-weight: 700; color: var(--gray-800); line-height: 1.2;
+  }
+  .master-nav-card.active .master-nav-label { color: var(--navy); }
+  .master-nav-sub {
+    font-size: 11px; color: var(--gray-400); font-weight: 400;
+  }
+  .master-nav-card.active .master-nav-sub { color: var(--gray-600); }
+ 
+  /* ── MASTER SECTION CARD HEADERS (icon accent) ── */
+  .master-card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+    font-size: 13px; font-weight: 600; color: var(--navy);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 24px 0 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .master-section-title::after { content:''; flex:1; height:1px; background:var(--gray-200); }
+ 
+  .plan-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .plan-chip {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    background: var(--gray-100); color: var(--gray-600);
+    border: 1.5px solid var(--gray-200); cursor: pointer; transition: all 0.15s;
+  }
+  .plan-chip:hover { border-color: var(--green-light); color: var(--green); }
+  .plan-chip.selected { background: var(--green); color: var(--white); border-color: var(--green); }
+ 
+  .pay-curve-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .pay-curve-table th {
+    background: var(--navy); color: var(--white);
+    padding: 8px 12px; text-align: left; font-weight: 600; font-size: 11px;
+  }
+  .pay-curve-table td { padding: 8px 12px; border-bottom: 1px solid var(--gray-200); }
+  .pay-curve-table tr:nth-child(even) td { background: var(--gray-100); }
+  .pay-curve-table input { padding: 4px 8px; font-size: 12px; width: 70px; }
+ 
+  .btn-save {
+    padding: 10px 24px; background: var(--green); color: var(--white);
+    border: none; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s; font-family: var(--font-sans);
+  }
+  .btn-save:hover { background: var(--navy); }
+  .btn-reset {
+    padding: 10px 24px; background: var(--white); color: var(--gray-600);
+    border: 1.5px solid var(--gray-200); border-radius: var(--radius); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; font-family: var(--font-sans); margin-right: 8px;
+  }
+  .btn-reset:hover { border-color: var(--gray-400); color: var(--gray-800); }
+ 
+  .save-toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--navy); color: var(--white);
+    padding: 12px 20px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    display: flex; align-items: center; gap: 8px;
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+  }
+  .save-toast.show { transform: translateY(0); opacity: 1; }
+  .save-toast .icon { color: var(--green-light); }
+ 
+  .admin-header-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, #007A3D 0%, #00A651 100%);
+    border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px; color: var(--white);
+  }
+  .admin-header-bar h2 { font-size: 16px; font-weight: 700; }
+  .admin-header-bar p { font-size: 12px; opacity: 0.7; }
+  .admin-badge { background: var(--accent); color: var(--navy); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+ 
+  .tab-inner { display: flex; gap: 4px; margin-bottom: 20px; background: var(--gray-200); padding: 4px; border-radius: 8px; width: fit-content; }
+  .tab-inner-btn {
+    padding: 7px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; font-family: var(--font-sans);
+    background: transparent; color: var(--gray-600);
+  }
+  .tab-inner-btn.active { background: var(--white); color: var(--navy); box-shadow: var(--shadow); }
+ 
+  .update-log {
+    font-size: 12px; color: var(--gray-600);
+    padding: 10px 14px; background: var(--gray-100);
+    border-radius: var(--radius); border-left: 3px solid var(--gray-400);
+    margin-top: 12px;
+  }
+  .update-log .time { color: var(--gray-400); font-family: var(--font-mono); }
+ 
+  /* ── KPI SELECTION (Client View) ── */
+  .kpi-select-col { width: 36px; text-align: center; }
+  .kpi-table tr.kpi-row-selected td { background: var(--green-soft); }
+ 
+  .kpi-row-select {
+    width: 100%; padding: 7px 10px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 12px; font-family: var(--font-sans);
+    color: var(--gray-800); background: var(--white);
+    outline: none; transition: border-color 0.15s; cursor: pointer;
+  }
+  .kpi-row-select:focus { border-color: var(--green); }
+  .kpi-row-select.active-kpi { border-color: var(--green); background: var(--green-soft); color: var(--navy); font-weight: 600; }
+  .kpi-row-select option[value=""] { color: var(--gray-400); }
+ 
+  .kpi-weight-select {
+    width: 72px; padding: 6px 8px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 12px; font-weight: 600; font-family: var(--font-sans);
+    color: #005C2E; background: rgba(108,194,74,0.15);
+    outline: none; transition: border-color 0.15s; cursor: pointer;
+    text-align: center;
+  }
+  .kpi-weight-select:focus { border-color: var(--green); }
+  .kpi-weight-select:disabled { opacity: 0.4; cursor: not-allowed; background: var(--gray-100); color: var(--gray-400); }
+ 
+  .btn-remove-row {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 1.5px solid var(--gray-200); background: var(--white);
+    color: var(--gray-400); font-size: 14px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; flex-shrink: 0;
+  }
+  .btn-remove-row:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+ 
+  .kpi-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--gray-200); transition: background 0.2s;
+  }
+  .kpi-dot.active { background: var(--green); }
+  .kpi-dot.min    { background: var(--gray-400); }
+  .btn-add-kpi {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius);
+    border: 1.5px dashed var(--gray-300); background: var(--white);
+    color: var(--gray-600); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; font-family: var(--font-sans);
+  }
+  .btn-add-kpi:hover { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+  .btn-add-kpi:disabled { opacity: 0.4; cursor: not-allowed; }
+  .kpi-row-num { font-size: 12px; color: var(--gray-400); font-weight: 600; text-align: center; }
+ 
+  /* ── PAY CURVE PANEL ── */
+  .pay-curve-panel {
+    margin-top: 20px;
+  }
+  .curve-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .curve-panel-header h3 { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+ 
+  .curve-body { padding: 20px; }
+  .curve-viz-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  @media(max-width:768px) { .curve-viz-wrap { grid-template-columns: 1fr; } }
+ 
+  /* SVG chart */
+  .curve-chart-wrap {
+    background: var(--gray-100); border-radius: var(--radius);
+    padding: 16px; position: relative;
+  }
+  .curve-chart-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--gray-600); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .curve-chart-title .dot-curve { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  #curveSvg { width: 100%; display: block; }
+ 
+  .curve-table-wrap { overflow-x: auto; }
+  .curve-detail-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .curve-detail-table th {
+    background: var(--navy); color: var(--white);
+    padding: 7px 10px; text-align: left; font-weight: 600; font-size: 11px;
+    white-space: nowrap;
+  }
+  .curve-detail-table td {
+    padding: 7px 10px; border-bottom: 1px solid var(--gray-200); font-family: var(--font-mono);
+  }
+  .curve-detail-table tr:nth-child(even) td { background: var(--gray-100); }
+  .curve-detail-table tr.active-band td {
+    background: var(--green-soft); font-weight: 600; color: var(--navy);
+  }
+  .curve-current-dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--accent); margin-right: 4px;
+    vertical-align: middle;
+  }
+  .curve-hint {
+    font-size: 11px; color: var(--gray-400); margin-top: 10px; text-align: center;
+  }
+  .no-kpi-selected {
+    text-align: center; padding: 40px 20px;
+    color: var(--gray-400); font-size: 13px;
+  }
+  .no-kpi-selected .icon { font-size: 32px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+ 
+<!-- ── TOP NAV ── -->
+<nav class="top-nav">
+  <div class="nav-brand">
+    <div class="dot"></div>
+    SIP Console — Zone Greater India
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab client active" onclick="showPage('client')">🧮 Calculator</button>
+    <button class="nav-tab reports" onclick="showPage('reports')">📈 Reports</button>
+
+  </div>
+  <div class="nav-right">
+    <div class="sync-badge" id="syncBadge" title="Network config sync status">
+      <div class="dot" id="syncDot" style="background:var(--gray-300)"></div>
+      <span id="syncLabel">Local</span>
+    </div>
+  </div>
+</nav>
+ 
+<!-- ── ADMIN LOGIN OVERLAY ── -->
+<div class="login-overlay" id="loginOverlay" style="display:none">
+  <div class="login-card">
+    <h2>Master Panel Access</h2>
+    <p>Enter your admin credentials to configure SIP settings</p>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeyup="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Sign In</button>
+    <p class="login-error" id="loginError"></p>
+    <p style="font-size:11px;color:var(--gray-400);margin-top:16px;text-align:center">Demo: admin / sip2025</p>
+    <button onclick="document.getElementById('loginOverlay').style.display='none'" style="width:100%;margin-top:10px;padding:8px;background:none;border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;font-size:12px;color:var(--gray-600)">Cancel</button>
+  </div>
+</div>
+ 
+<!-- ── CLIENT PAGE ── -->
+<div class="page active" id="page-client">
+  <div class="page-header">
+    <div class="label">Sales Incentive Plan</div>
+    <h1 id="clientTitle">2026 SIP Calculator</h1>
+    <p id="clientSubtitle">International Operations — Zone Greater India &nbsp;·&nbsp; For simulation purposes only</p>
+    <div class="meta">
+      <div class="meta-item">Plan Year: <span id="metaYear">CY2026</span></div>
+      <div class="meta-item">Payout Cycle: <span id="metaCycle">—</span></div>
+      <div class="meta-item">Active Plans: <span id="metaPlanCount">—</span></div>
+      <div class="meta-item" id="metaLastUpdate">Last updated: <span>—</span></div>
+    </div>
+  </div>
+ 
+  <div class="grid-2">
+    <!-- Inputs -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Simulation Inputs</h3>
+        <span class="badge" style="background:var(--green-soft);color:var(--navy)">Step 1</span>
+      </div>
+      <div class="card-body">
+        <div class="field-group">
+          <div class="field-label">Simulation Payout Cycle <span class="required">Required</span></div>
+          <select id="payoutCycle" onchange="updateStartMonth(); updateRevisionMonths(); renderKpiTable(_kpiRows); updateCalc()">
+            <option value="H1 YTD">H1 YTD (till 30-Jun-2026)</option>
+            <option value="Full Year" selected>Full Year (till 31-Dec-2026)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">SIP Plan <span class="required">Required</span></div>
+          <select id="sipPlan" onchange="onPlanChange()">
+          </select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">SIP Start Date</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <select id="startDay" onchange="updateCalc()"></select>
+              <div class="field-hint">Day</div>
+            </div>
+            <div>
+              <select id="startMonth" onchange="updateStartDays(); updateCalc()"></select>
+              <div class="field-hint">Month</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- SIP Variable -->
+    <div class="card">
+      <div class="card-header">
+        <h3>SIP Variable <span style="font-weight:400;color:var(--gray-400)">(Optional — for amount simulation)</span></h3>
+        <span class="badge" style="background:rgba(108,194,74,0.15);color:#005C2E">Optional</span>
+      </div>
+      <div class="card-body">
+        <div class="field-group">
+          <div class="field-label">SIP Variable on SIP Start <span class="optional">Mandatory to simulate amount</span></div>
+          <input type="number" id="sipVar0" placeholder="e.g. 500000" onchange="updateRevisionMonths(); updateCalc()">
+          <div class="field-hint">Full Year SIP variable as per your letter</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">SIP Variable Revision 1 <span class="optional">if revision happened</span></div>
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px">
+            <input type="number" id="sipVar1" placeholder="Revised amount" onchange="updateRevisionMonths(); updateCalc()">
+            <select id="sipVar1Month" onchange="updateRevisionMonths(); updateCalc()"></select>
+          </div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">SIP Variable Revision 2 <span class="optional">if revision happened</span></div>
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px">
+            <input type="number" id="sipVar2" placeholder="Revised amount" onchange="updateCalc()">
+            <select id="sipVar2Month" onchange="updateCalc()"></select>
+          </div>
+          <div id="sipVar2IncompleteNotice" style="display:none;margin-top:8px;padding:8px 12px;
+            background:#FEF2F2;border-radius:var(--radius);border-left:3px solid var(--red);
+            font-size:12px;color:#991B1B;display:none;align-items:center;gap:8px">
+            <span style="font-size:14px">⚠️</span>
+            <span><strong>Fill complete data</strong> — both Revision 2 amount and month are required.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- KPI Section -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Commercial Guideline KPIs</h3>
+      <span class="badge" style="background:var(--green-soft);color:var(--navy)">Step 2 — Enter Targets & Achievements</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div style="padding:12px 20px;font-size:12px;color:var(--gray-600);background:var(--gray-100);border-bottom:1px solid var(--gray-200)">
+        Refer to the Sales Incentive Plan details in your Target Letter from Xactly Incent
+      </div>
+      <div style="overflow-x:auto">
+        <table class="kpi-table">
+          <thead>
+            <tr>
+              <th style="width:32px">#</th>
+              <th style="min-width:180px">KPI</th>
+              <th style="width:70px">Weight</th>
+              <th style="min-width:160px">Payout Curve</th>
+              <th style="min-width:130px">Target</th>
+              <th style="min-width:130px">Achievement</th>
+              <th style="width:90px">Achievement %</th>
+              <th style="width:100px">Payout Factor</th>
+              <th style="width:36px"></th>
+            </tr>
+          </thead>
+          <tbody id="kpiTableBody">
+          </tbody>
+          <tfoot>
+            <tr style="background:var(--gray-100)">
+              <td colspan="2" style="font-weight:600;font-size:12px;padding:10px 12px">Total</td>
+              <td>
+                <span style="font-size:12px;font-weight:700;color:var(--navy)" id="totalWeight">—</span>
+                <div id="weightErrorNotice" style="display:none;margin-top:4px;font-size:10px;color:var(--red);font-weight:600;white-space:nowrap">
+                  ⚠ Must be 100%
+                </div>
+              </td>
+              <td colspan="4">
+                <div id="incompleteInputNotice" style="display:none;font-size:11px;color:#991B1B;background:#FEF2F2;padding:3px 8px;border-radius:4px;border-left:2px solid var(--red)">
+                  ✏️ Fill all Target &amp; Achievement fields
+                </div>
+              </td>
+              <td><span style="font-size:13px;font-weight:700;color:var(--green);font-family:var(--font-mono)" id="payoutFactor">—</span></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+ 
+      <div style="padding:16px 20px">
+        <div class="factor-display">
+          <!-- Header: big number + status pill -->
+          <div class="factor-display-header">
+            <div class="factor-display-left">
+              <div class="factor-display-icon" id="factorIcon">🎯</div>
+              <div>
+                <div class="factor-display-label">Applicable Payout Factor</div>
+                <div class="factor-number" id="applicableFactor">—</div>
+              </div>
+            </div>
+            <div class="factor-status-pill zero" id="factorStatusPill">Awaiting Input</div>
+          </div>
+ 
+          <!-- Body: bar + split + label -->
+          <div class="factor-display-body">
+            <div class="factor-bar-wrap">
+              <div class="factor-bar-bg">
+                <div class="factor-bar-fill" id="factorBar" style="width:0%"></div>
+              </div>
+              <!-- Milestone markers -->
+              <div style="position:relative;height:22px;margin-top:2px">
+                <div class="factor-milestone" style="left:0%">
+                  <div class="tick"></div>0%
+                </div>
+                <div class="factor-milestone" id="midMilestone" style="left:50%">
+                  <div class="tick"></div><span id="midMilestoneLabel">100%</span>
+                </div>
+                <div class="factor-milestone" style="left:100%;transform:translateX(-100%)">
+                  <div class="tick"></div><span id="maxMilestoneLabel">300%</span>
+                </div>
+              </div>
+            </div>
+ 
+            <!-- Raw vs Applicable split -->
+            <div class="factor-split" id="factorSplit" style="display:none">
+              <div class="factor-split-item">
+                <div class="fs-label">Raw Weighted Factor</div>
+                <div class="fs-val" id="splitRawFactor">—</div>
+              </div>
+              <div class="factor-split-item highlight">
+                <div class="fs-label">✦ Applicable Factor</div>
+                <div class="fs-val" id="splitApplicableFactor">—</div>
+              </div>
+            </div>
+ 
+            <div class="factor-label" id="factorLabel">
+              <div class="dot gray" id="factorDot"></div>
+              <span id="factorLabelText">Enter targets and achievements to compute payout</span>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- H1 cap notification -->
+        <div id="h1CapNotice" style="display:none;margin-top:12px;padding:12px 16px;
+          background:#FEF3DC;border-radius:var(--radius);border-left:3px solid #F5A623;
+          font-size:12px;color:#7A4700;align-items:center;gap:10px">
+          <span style="font-size:18px">🔒</span>
+          <span><strong>H1 Payout is capped at 100%.</strong> Calculated factor above 100% will be applied as 100% for H1 YTD payout.</span>
+        </div>
+ 
+      </div>
+ 
+      <!-- Pay Curve panel moved to Reports page -->
+    </div>
+  </div>
+ 
+  <!-- Results -->
+  <div class="grid-2" id="resultsGrid">
+    <div class="result-box result-target">
+      <div class="label">SIP Target Incentive Amount</div>
+      <div class="amount" id="targetAmount">₹ 0</div>
+      <div class="sub">Based on SIP variable input</div>
+    </div>
+    <div class="result-box result-payout" id="payoutBox">
+      <div class="label">Simulated SIP Payout Amount</div>
+      <div class="amount" id="payoutAmount">₹ 0</div>
+      <div class="sub">Target × Applicable Payout Factor</div>
+    </div>
+  </div>
+ 
+  <div style="margin-top:16px">
+    <div class="notice warning">
+      <div class="icon">⚠️</div>
+      <div>
+        <strong>Important Notes:</strong> "H1 YTD" Payout is considered till <span id="noteH1End">30-Jun-2026</span>. "H2 Full Year" Payout is considered till <span id="noteH2End">31-Dec-2026</span>. Every role closure can happen only on the last day of any month except Resign. "Resign" (Last working day) before <span id="noteH1End2">30-Jun</span> is not eligible for SIP. This calculator is for simulation purposes only; simulated outcomes are not reflective of actual results and payouts. If both target and achievement are not entered, the calculator will assume zero.
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- ── REPORTS PAGE ── -->
+<div class="page" id="page-reports">
+  <div class="page-header" style="background:linear-gradient(135deg,#00A651 0%,#007A3D 100%)">
+    <div class="label">Pay Curve Reports</div>
+    <h1>📈 Payout Curve Viewer</h1>
+    <p>Select a KPI to view its payout curve, band breakdown and your current position</p>
+  </div>
+ 
+  <!-- KPI selector -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 20px">
+      <div style="font-size:13px;font-weight:600;color:var(--gray-600);white-space:nowrap">Select KPI:</div>
+      <div id="reportKpiPills" style="display:flex;gap:8px;flex-wrap:wrap;flex:1"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0">
+        <span style="font-size:12px;color:var(--gray-400)">Active Plan:</span>
+        <span class="badge" style="background:var(--green-soft);color:var(--navy)" id="reportActivePlan">—</span>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Detail curve panel -->
+  <div class="card">
+    <div class="curve-panel-header">
+      <h3>📈 Pay Curve — <span id="reportCurvePanelTitle" style="color:var(--navy)">Select a KPI above</span></h3>
+      <span class="badge" style="background:var(--green-soft);color:var(--navy)" id="reportCurveNameBadge"></span>
+    </div>
+    <div class="curve-body" id="reportCurvePanelBody">
+      <div class="no-kpi-selected">
+        <div class="icon">📊</div>
+        <div>Select a KPI pill above to view its Pay Curve</div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- All curves quick reference -->
+  <div class="card">
+    <div class="card-header">
+      <h3>All Pay Curves — Quick Reference</h3>
+      <span class="badge" style="background:var(--green-soft);color:var(--green)" id="reportAllCurvesBadge">3 curves</span>
+    </div>
+    <div class="card-body" style="padding:0" id="reportAllCurves"></div>
+  </div>
+</div>
+ 
+
+ 
+<div class="save-toast" id="saveToast">
+  <span class="icon">✅</span> <span id="toastMsg">Settings saved and synced to clients</span>
+</div>
+ 
+<script>
+// ═══════════════════════════════════════════
+//  DATA — decoded from Test.xlsx
+// ═══════════════════════════════════════════
+ 
+/*%%CFG_START%%*/
+const DEFAULT_CONFIG = {
+  "general": {
+    "year": "2026",
+    "zone": "International Operations - Zone Greater India",
+    "h1End": "30-Jun-2026",
+    "h2End": "31-Dec-2026",
+    "simPeriod": 3,
+    "currency": "₹"
+  },
+  "plans": [
+    {
+      "id": "Segment KAM",
+      "active": true
+    },
+    {
+      "id": "Non-Segment KAM",
+      "active": true
+    }
+  ],
+  "planKpis": {
+    "Segment KAM": [
+      {
+        "name": "Account Growth",
+        "weight": 0.6,
+        "curve": "Segment OB Curve"
+      },
+      {
+        "name": "Account Growth",
+        "weight": 0.2,
+        "curve": "Segment OB Curve"
+      },
+      {
+        "name": "Offer Growth",
+        "weight": 0.2,
+        "curve": "Segment OB Curve"
+      }
+    ],
+    "Non-Segment KAM": [
+      {
+        "name": "Account Growth",
+        "weight": 0.5,
+        "curve": "Sales & Orders Curve"
+      },
+      {
+        "name": "Offer Growth",
+        "weight": 0.3,
+        "curve": "Sales & Orders Curve"
+      },
+      {
+        "name": "Profitable Growth",
+        "weight": 0.2,
+        "curve": "Profitability Curve"
+      },
+      {
+        "name": "Individual Growth",
+        "weight": 0.2,
+        "curve": "Performance Payout Curve"
+      }
+    ],
+    "default": [
+      {
+        "name": "Account Growth",
+        "weight": 0.5,
+        "curve": "Sales & Orders Curve"
+      },
+      {
+        "name": "Offer Growth",
+        "weight": 0.3,
+        "curve": "Sales & Orders Curve"
+      },
+      {
+        "name": "Profitable Growth",
+        "weight": 0.2,
+        "curve": "Profitability Curve"
+      },
+      {
+        "name": "Individual Growth",
+        "weight": 0.2,
+        "curve": "Performance Payout Curve"
+      }
+    ]
+  },
+  "curves": {
+    "Sales & Orders Curve": [
+      {
+        "min": 0,
+        "max": 0.8,
+        "minP": 0,
+        "maxP": 0,
+        "rate": 0
+      },
+      {
+        "min": 0.8,
+        "max": 0.9,
+        "minP": 0,
+        "maxP": 0.4,
+        "rate": 4
+      },
+      {
+        "min": 0.9,
+        "max": 1,
+        "minP": 0.4,
+        "maxP": 1,
+        "rate": 6
+      },
+      {
+        "min": 1,
+        "max": 1.2,
+        "minP": 1,
+        "maxP": 2,
+        "rate": 5
+      },
+      {
+        "min": 1.2,
+        "max": 2,
+        "minP": 2,
+        "maxP": 3,
+        "rate": 1.25
+      },
+      {
+        "min": 2,
+        "max": 99,
+        "minP": 3,
+        "maxP": 3,
+        "rate": 0
+      }
+    ],
+    "Segment OB Curve": [
+      {
+        "min": 0,
+        "max": 0.8,
+        "minP": 0,
+        "maxP": 0,
+        "rate": 0
+      },
+      {
+        "min": 0.8,
+        "max": 0.9,
+        "minP": 0,
+        "maxP": 0.4,
+        "rate": 4
+      },
+      {
+        "min": 0.9,
+        "max": 1,
+        "minP": 0.4,
+        "maxP": 1,
+        "rate": 6
+      },
+      {
+        "min": 1,
+        "max": 1.2,
+        "minP": 1,
+        "maxP": 2,
+        "rate": 5
+      },
+      {
+        "min": 1.2,
+        "max": 1.6,
+        "minP": 2,
+        "maxP": 2,
+        "rate": 0
+      },
+      {
+        "min": 1.6,
+        "max": 99,
+        "minP": 2,
+        "maxP": 2,
+        "rate": 0
+      }
+    ],
+    "Profitability Curve": [
+      {
+        "min": 0,
+        "max": 0.75,
+        "minP": 0,
+        "maxP": 0,
+        "rate": 0
+      },
+      {
+        "min": 0.75,
+        "max": 1,
+        "minP": 0,
+        "maxP": 1,
+        "rate": 4
+      },
+      {
+        "min": 1,
+        "max": 1.5,
+        "minP": 1,
+        "maxP": 2,
+        "rate": 2
+      },
+      {
+        "min": 1.5,
+        "max": 99,
+        "minP": 2,
+        "maxP": 2,
+        "rate": 0
+      }
+    ],
+    "Performance Payout Curve": [
+      {
+        "min": 0,
+        "max": 1,
+        "minP": 0,
+        "maxP": 0,
+        "rate": 0
+      },
+      {
+        "min": 1,
+        "max": 1.5,
+        "minP": 1,
+        "maxP": 1.5,
+        "rate": 1
+      },
+      {
+        "min": 1.5,
+        "max": 2,
+        "minP": 1.5,
+        "maxP": 2,
+        "rate": 1
+      },
+      {
+        "min": 2,
+        "max": 99,
+        "minP": 2,
+        "maxP": 2,
+        "rate": 0
+      }
+    ]
+  },
+  "lastUpdated": "2026-06-26T08:21:14.274Z"
+};
+/*%%CFG_END%%*/
+ 
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const STORE_KEY = 'sip_console_config';
+
+function loadConfig() {
+  try {
+    const raw = sessionStorage.getItem(STORE_KEY);
+    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  } catch { return JSON.parse(JSON.stringify(DEFAULT_CONFIG)); }
+}
+
+function saveConfig(c) {
+  c.lastUpdated = new Date().toISOString();
+  sessionStorage.setItem(STORE_KEY, JSON.stringify(c));
+}
+
+// ── MASTER: export a self-contained client HTML with config baked in ──
+// Fetches the raw source of this file (works for file:// with no CORS issues),
+// then splices the current config between the two sentinel comments and downloads.
+function exportClientHtml() {
+  const btn = document.getElementById('exportClientBtn');
+  if (btn) { btn.textContent = '\u23F3 Building\u2026'; btn.disabled = true; }
+
+  try {
+    const c = loadConfig();
+    c.lastUpdated = new Date().toISOString();
+
+    // ── Read exact source bytes from the embedded base64 template ──
+    // This avoids outerHTML entirely (which mangles sentinels and escapes content).
+    const tplEl = document.getElementById('srcTpl');
+    if (!tplEl) throw new Error('Source template element not found');
+    const b64 = tplEl.textContent.trim();
+    // Decode base64 → UTF-8 string
+    const bytes = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+    let src = new TextDecoder('utf-8').decode(bytes);
+
+    // ── 1. Bake in the live config via sentinels ──
+    const CFG_S = '/*%%CFG_START%%*/';
+    const CFG_E = '/*%%CFG_END%%*/';
+    const iCfgS = src.indexOf(CFG_S);
+    const iCfgE = src.indexOf(CFG_E);
+    if (iCfgS === -1 || iCfgE === -1) throw new Error('Config sentinels not found');
+
+    const clientCfg = JSON.parse(JSON.stringify(c));
+    const newCfgBlock = CFG_S + '\nconst DEFAULT_CONFIG = ' + JSON.stringify(clientCfg, null, 2) + ';\n' + CFG_E;
+    let clientSrc = src.slice(0, iCfgS) + newCfgBlock + src.slice(iCfgE + CFG_E.length);
+
+    // ── 2. Strip Master Panel nav tab ──
+    const TAB_S = '<!--%%MASTER_TAB_START%%-->';
+    const TAB_E = '<!--%%MASTER_TAB_END%%-->';
+    const iTabS = clientSrc.indexOf(TAB_S);
+    const iTabE = clientSrc.indexOf(TAB_E);
+    if (iTabS !== -1 && iTabE !== -1)
+      clientSrc = clientSrc.slice(0, iTabS) + clientSrc.slice(iTabE + TAB_E.length);
+
+    // ── 3. Strip Master Panel page ──
+    const PG_S = '<!--%%MASTER_PAGE_START%%-->';
+    const PG_E = '<!--%%MASTER_PAGE_END%%-->';
+    const iPgS = clientSrc.indexOf(PG_S);
+    const iPgE = clientSrc.indexOf(PG_E);
+    if (iPgS !== -1 && iPgE !== -1)
+      clientSrc = clientSrc.slice(0, iPgS) + clientSrc.slice(iPgE + PG_E.length);
+
+    // ── 4. Force Non-Segment KAM as default plan ──
+    const INIT_S = 'var _s=document.getElementById("sipPlan");if(_s)_s.value="Non-Segment KAM";';
+    clientSrc = clientSrc.split(INIT_S).join(
+      'var _s=document.getElementById("sipPlan");if(_s)_s.value="Non-Segment KAM";'
+    );
+
+    // ── 5. Stamp badge text into stampNavBadge via sentinel ──
+    // Replace the sentinel in the JS function body so the client file sets
+    // the correct badge text when stampNavBadge() runs on load.
+    const stamp     = new Date(c.lastUpdated).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+    const comment   = (document.getElementById('exportComment').value || '').trim();
+    const badgeText = comment ? 'Config ' + stamp + ' \u00b7 ' + comment : 'Config ' + stamp;
+    const safeText  = badgeText.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+    clientSrc = clientSrc
+      .split("'Config 26 Jun 2026 · SE_SIP_2026'")
+      .join("'" + safeText + "'");
+
+    // ── 6. Download ──
+    const blob  = new Blob([clientSrc], { type: 'text/html' });
+    const dlUrl = URL.createObjectURL(blob);
+    const a     = document.createElement('a');
+    a.href     = dlUrl;
+    a.download = 'SIP_Console_client.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(dlUrl);
+
+    addAuditLog('Client HTML exported \u2014 ' + badgeText);
+    showToast('\uD83D\uDCE4 SIP_Console_client.html ready \u2014 share via OneDrive or email');
+  } catch(err) {
+    showToast('\u274C Export failed: ' + err.message);
+    console.error('exportClientHtml error:', err);
+  } finally {
+    if (btn) { btn.textContent = '\uD83D\uDCE4 Export Client HTML'; btn.disabled = false; }
+  }
+}
+
+// Stamp the nav badge with the config date on load (shows clients when it was last exported)
+function stampNavBadge() {
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  if (!dot || !label) return;
+  dot.style.background = 'var(--green-light)';
+  label.textContent = 'Config 26 Jun 2026 · SE_SIP_2026';
+}
+
+let cfg = loadConfig();
+let adminAuthed = false;
+ 
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
+function requestAdmin() {
+  if (adminAuthed) { showPage('master'); return; }
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('loginUser').focus();
+}
+ 
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (u === 'admin' && p === 'sip2026') {
+    adminAuthed = true;
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('loginError').textContent = '';
+    showPage('master');
+    initMasterPage();
+  } else {
+    document.getElementById('loginError').textContent = 'Invalid credentials. Try admin / sip2026';
+    document.getElementById('loginPass').value = '';
+  }
+}
+ 
+function lockAdmin() {
+  adminAuthed = false;
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').textContent = '';
+  showPage('client');
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'client')  { document.querySelector('.nav-tab.client').classList.add('active');  refreshClientView(); }
+  if (page === 'reports') { document.querySelector('.nav-tab.reports').classList.add('active'); initReportsPage(); }
+  if (page === 'master')  { document.querySelector('.nav-tab.admin').classList.add('active'); }
+}
+ 
+function showMasterTab(tab, cardEl) {
+  document.querySelectorAll('.master-tab-content').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.master-nav-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('masterTab-' + tab).style.display = 'block';
+  if (cardEl) cardEl.classList.add('active');
+  else { const mnc = document.getElementById('mnc-' + tab); if (mnc) mnc.classList.add('active'); }
+}
+ 
+// Days in each month — respects leap year using current config year
+const ALL_MONTH_OPTIONS = [
+  [1,'January'],[2,'February'],[3,'March'],[4,'April'],
+  [5,'May'],[6,'June'],[7,'July'],[8,'August'],
+  [9,'September'],[10,'October'],[11,'November'],[12,'December']
+];
+ 
+function updateStartMonth() {
+  const sel   = document.getElementById('startMonth');
+  if (!sel) return;
+  const prev  = parseInt(sel.value) || 1;
+  const cycle = document.getElementById('payoutCycle')?.value || '';
+  const ceil  = cycle === 'H1 YTD' ? 6 : 12;
+ 
+  sel.innerHTML = '';
+  for (const [num, name] of ALL_MONTH_OPTIONS) {
+    if (num > ceil) break;
+    const opt = document.createElement('option');
+    opt.value = num;
+    opt.textContent = name;
+    if (num === Math.min(prev, ceil)) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  // If previous selection was beyond the ceiling, cascade reset
+  if (prev > ceil) updateRevisionMonths();
+}
+ 
+function updateStartDays() {
+  updateStartMonth();
+  const monthSel = document.getElementById('startMonth');
+  const daySel   = document.getElementById('startDay');
+  if (!monthSel || !daySel) return;
+ 
+  const month    = parseInt(monthSel.value);
+  const year     = parseInt(cfg?.general?.year) || new Date().getFullYear();
+  const daysInMonth = new Date(year, month, 0).getDate();
+ 
+  const prevDay  = parseInt(daySel.value) || 1;
+  daySel.innerHTML = '';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = d;
+    if (d === Math.min(prevDay, daysInMonth)) opt.selected = true;
+    daySel.appendChild(opt);
+  }
+ 
+  // Rebuild revision month dropdowns whenever start month changes
+  updateRevisionMonths();
+}
+ 
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ 
+function updateRevisionMonths() {
+  const startMonth = parseInt(document.getElementById('startMonth')?.value) || 1;
+  const sel1 = document.getElementById('sipVar1Month');
+  const sel2 = document.getElementById('sipVar2Month');
+  const inp1 = document.getElementById('sipVar1');
+  const inp2 = document.getElementById('sipVar2');
+  const var0 = (document.getElementById('sipVar0')?.value || '').trim();
+  if (!sel1 || !sel2) return;
+ 
+  // ── Gate: if SIP Variable on SIP Start is empty, lock Revision 1 (and cascade to Rev 2) ──
+  if (!var0) {
+    // Lock Rev1
+    sel1.innerHTML = '<option value="">— Fill SIP Start first —</option>';
+    sel1.disabled  = true;
+    sel1.style.opacity = '0.45';
+    sel1.style.cursor  = 'not-allowed';
+    if (inp1) { inp1.disabled = true; inp1.style.opacity = '0.45'; inp1.style.cursor = 'not-allowed'; inp1.placeholder = 'Fill SIP Start amount first'; }
+ 
+    // Lock Rev2 as well
+    sel2.innerHTML = '<option value="">— Fill SIP Start first —</option>';
+    sel2.disabled  = true;
+    sel2.style.opacity = '0.45';
+    sel2.style.cursor  = 'not-allowed';
+    if (inp2) { inp2.disabled = true; inp2.style.opacity = '0.45'; inp2.style.cursor = 'not-allowed'; inp2.placeholder = 'Fill SIP Start amount first'; }
+    return;
+  }
+ 
+  // ── SIP Start is filled — unlock Rev1 ──
+  sel1.disabled  = false;
+  sel1.style.opacity = '';
+  sel1.style.cursor  = '';
+  if (inp1) { inp1.disabled = false; inp1.style.opacity = ''; inp1.style.cursor = ''; inp1.placeholder = 'Revised amount'; }
+ 
+  const prev1 = parseInt(sel1.value) || 0;
+  const prev2 = parseInt(sel2.value) || 0;
+ 
+  // ── Month ceiling: Jun (6) for H1 YTD, Dec (12) for Full Year ──
+  const _cycle    = document.getElementById('payoutCycle')?.value || '';
+  const monthCeil = _cycle === 'H1 YTD' ? 6 : 12;
+ 
+  // ── Revision 1: months strictly after SIP Start Month, up to monthCeil ──
+  sel1.innerHTML = '<option value="">— Month —</option>';
+  for (let m = startMonth + 1; m <= monthCeil; m++) {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = MONTH_NAMES[m - 1];
+    if (m === prev1) opt.selected = true;
+    sel1.appendChild(opt);
+  }
+  // Reset if previously selected month is now out of range
+  if (prev1 && (prev1 <= startMonth || prev1 > monthCeil)) sel1.value = '';
+ 
+  // ── Revision 2: depends on BOTH Rev1 amount AND Rev1 month being filled ──
+  const rev1Selected = parseInt(sel1.value) || 0;
+  const var1 = (inp1?.value || '').trim();
+ 
+  if (!rev1Selected || !var1) {
+    const msg = !var1 && !rev1Selected ? '— Fill Rev 1 first —'
+              : !var1                  ? '— Fill Rev 1 amount first —'
+              :                          '— Select Rev 1 month first —';
+    const ph  = !var1 && !rev1Selected ? 'Fill Rev 1 amount & month first'
+              : !var1                  ? 'Fill Rev 1 amount first'
+              :                          'Select Rev 1 month first';
+    sel2.innerHTML = `<option value="">${msg}</option>`;
+    sel2.disabled  = true;
+    sel2.style.opacity = '0.45';
+    sel2.style.cursor  = 'not-allowed';
+    if (inp2) { inp2.disabled = true; inp2.style.opacity = '0.45'; inp2.style.cursor = 'not-allowed'; inp2.placeholder = ph; }
+  } else {
+    // Rev1 is chosen — Rev2 shows only months strictly after Rev1 month, up to monthCeil
+    sel2.disabled  = false;
+    sel2.style.opacity = '';
+    sel2.style.cursor  = '';
+    if (inp2) { inp2.disabled = false; inp2.style.opacity = ''; inp2.style.cursor = ''; inp2.placeholder = 'Revised amount'; }
+ 
+    sel2.innerHTML = '<option value="">— Month —</option>';
+    for (let m = rev1Selected + 1; m <= monthCeil; m++) {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = MONTH_NAMES[m - 1];
+      if (m === prev2) opt.selected = true;
+      sel2.appendChild(opt);
+    }
+    // Reset if previously selected month is now out of range
+    if (prev2 && (prev2 <= rev1Selected || prev2 > monthCeil)) sel2.value = '';
+  }
+}
+let _clientInitialised = false;
+ 
+function refreshClientView() {
+  cfg = loadConfig();
+  const g = cfg.general;
+  document.getElementById('metaCycle').textContent = document.getElementById('payoutCycle').value || '—';
+  const activePlans = cfg.plans.filter(p => p.active);
+  document.getElementById('metaPlanCount').textContent = activePlans.length;
+  const lu = cfg.lastUpdated ? new Date(cfg.lastUpdated).toLocaleString('en-IN') : '—';
+  document.getElementById('metaLastUpdate').querySelector('span').textContent = lu;
+  // ── Apply all year/date-dependent labels from cfg.general ──
+  const yr    = g.year     || '2026';
+  const zone  = g.zone     || 'International Operations — Zone Greater India';
+  const h1End = g.h1End    || ('30-Jun-' + yr);
+  const h2End = g.h2End    || ('31-Dec-' + yr);
+ 
+  document.getElementById('clientTitle').textContent     = yr + ' SIP Calculator';
+  const subEl = document.getElementById('clientSubtitle');
+  if (subEl) subEl.textContent = zone + ' · For simulation purposes only';
+  const metaYrEl = document.getElementById('metaYear');
+  if (metaYrEl) metaYrEl.textContent = 'CY' + yr;
+ 
+  // Payout cycle dropdown option labels — query by value (id on <option> is unreliable)
+  const cycleEl = document.getElementById('payoutCycle');
+  if (cycleEl) {
+    const optH1 = cycleEl.querySelector('option[value="H1 YTD"]');
+    const optFY = cycleEl.querySelector('option[value="Full Year"]');
+    if (optH1) optH1.textContent = 'H1 YTD (till ' + h1End + ')';
+    if (optFY) optFY.textContent = 'Full Year (till ' + h2End + ')';
+  }
+ 
+  // Important notes dates
+  const nH1a = document.getElementById('noteH1End');
+  const nH2  = document.getElementById('noteH2End');
+  const nH1b = document.getElementById('noteH1End2');
+  if (nH1a) nH1a.textContent = h1End;
+  if (nH2)  nH2.textContent  = h2End;
+  if (nH1b) nH1b.textContent = h1End.replace(/-\d{4}$/, ''); // e.g. "30-Jun"
+ 
+  // Rebuild plan dropdown
+  const planSel = document.getElementById('sipPlan');
+  const curVal = planSel.value;
+  planSel.innerHTML = '';
+  activePlans.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.id;
+    planSel.appendChild(opt);
+  });
+  if (curVal && activePlans.find(p => p.id === curVal)) {
+    planSel.value = curVal;
+  } else {
+    // Default to Non-Segment KAM on first load
+    const defaultPlan = activePlans.find(p => p.id === 'Non-Segment KAM') || activePlans[0];
+    if (defaultPlan) planSel.value = defaultPlan.id;
+  }
+ 
+  if (!_clientInitialised) {
+    // First load only — build KPI rows from plan defaults
+    _clientInitialised = true;
+    updateStartDays(); // also calls updateRevisionMonths internally
+    onPlanChange();
+  } else {
+    // Returning from another page — just recalculate, keep existing KPI rows intact
+    updateCalc();
+  }
+}
+ 
+function onPlanChange() {
+  const plan = document.getElementById('sipPlan').value;
+  const kpis = getKpisForPlan(plan);
+  // Reset to plan defaults: pre-populate rows with default KPIs
+  renderKpiTable(kpis);
+  updateCalc();
+}
+ 
+function getKpisForPlan(plan) {
+  if (cfg.planKpis[plan]) return cfg.planKpis[plan];
+  if (plan.includes('Segment')) return cfg.planKpis['Segment KAM'] || cfg.planKpis['default'];
+  return cfg.planKpis['Non-Segment KAM'] || cfg.planKpis['default'];
+}
+ 
+// All available KPIs (union of all plan KPIs + curves)
+function getAllKpiOptions() {
+  const seen = {};
+  Object.values(cfg.planKpis).forEach(kpiList => {
+    kpiList.forEach(k => { seen[k.name] = k; });
+  });
+  return Object.values(seen);
+}
+ 
+// State: user's current KPI row selections (array of {name, weight, curve} or null)
+let _kpiRows = []; // each entry: { name, weight, curve, target:'', ach:'' }
+ 
+function renderKpiTable(defaultKpis) {
+  // Initialize rows from defaults (first 3 only)
+  _kpiRows = defaultKpis.slice(0, 3).map(k => ({ name: k.name, weight: k.weight, curve: k.curve, target: '', ach: '' }));
+  _currentKpiIdx = null;
+  rebuildKpiTableDOM();
+}
+ 
+function rebuildKpiTableDOM() {
+  const tbody = document.getElementById('kpiTableBody');
+  // Save current target/ach values before clearing
+  document.querySelectorAll('.kpi-target').forEach((el, i) => { if (_kpiRows[i]) _kpiRows[i].target = el.value; });
+  document.querySelectorAll('.kpi-ach').forEach((el, i) => { if (_kpiRows[i]) _kpiRows[i].ach = el.value; });
+ 
+  tbody.innerHTML = '';
+  const allKpis = getAllKpiOptions();
+ 
+  // KPIs restricted to one row at a time
+  const SINGLE_USE = new Set(['Profitable Growth', 'Individual Growth']);
+  // Which single-use KPIs are already claimed by other rows
+  const usedSingleUse = new Set(
+    _kpiRows.map(r => r.name).filter(n => SINGLE_USE.has(n))
+  );
+ 
+  // KPIs not selectable when Segment KAM plan is active
+  const SEGMENT_KAM_RESTRICTED = new Set(['Profitable Growth', 'Individual Growth']);
+  const isSegmentKAM = (document.getElementById('sipPlan').value === 'Segment KAM');
+ 
+  _kpiRows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'kpi-row' + (i === _currentKpiIdx ? ' kpi-row-selected' : '');
+    tr.dataset.idx = i;
+ 
+    // Build KPI dropdown options — disable single-use KPIs already used in another row,
+    // and disable Profitable Growth / Individual Growth for Segment KAM plan
+    const opts = [`<option value="">— Select KPI —</option>`];
+    allKpis.forEach(k => {
+      const isSelected = row.name === k.name;
+      const isTakenElsewhere = SINGLE_USE.has(k.name) && usedSingleUse.has(k.name) && !isSelected;
+      const isSegmentRestricted = isSegmentKAM && SEGMENT_KAM_RESTRICTED.has(k.name);
+      const isDisabled = isTakenElsewhere || isSegmentRestricted;
+      let optLabel = k.name;
+      if (isTakenElsewhere) optLabel += ' (already used)';
+      else if (isSegmentRestricted) optLabel += ' (not available for Segment KAM)';
+      opts.push(`<option value="${k.name}" ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}>${optLabel}</option>`);
+    });
+ 
+    const curve   = row.name ? `<span class="curve-tag" style="cursor:pointer;font-size:11px" onclick="onKpiDropdownSelect(${i},'${row.name}')">${row.curve}</span>` : '<span style="color:var(--gray-400);font-size:12px">—</span>';
+    const selectCls = row.name ? 'kpi-row-select active-kpi' : 'kpi-row-select';
+    const currentWeightPct = Math.round(row.weight * 100);
+ 
+    // Build weight dropdown: 20%–60% in steps of 10
+    const weightOpts = row.name
+      ? [20,30,40,50,60].map(w =>
+          `<option value="${w}" ${currentWeightPct === w ? 'selected' : ''}>${w}%</option>`
+        ).join('')
+      : `<option value="">—</option>`;
+ 
+    tr.innerHTML = `
+      <td class="kpi-row-num">${i + 1}</td>
+      <td>
+        <select class="${selectCls}" data-rowIdx="${i}" onchange="onKpiDropdownChange(this, ${i})">
+          ${opts.join('')}
+        </select>
+      </td>
+      <td>
+        <select class="kpi-weight-select" id="kpiWeight${i}" ${!row.name ? 'disabled' : ''} onchange="onWeightChange(this, ${i})">
+          ${weightOpts}
+        </select>
+      </td>
+      <td id="kpiCurveCell${i}">${curve}</td>
+      <td><input type="number" class="kpi-target" data-idx="${i}" placeholder="Enter target" step="any" value="${row.target}" onchange="updateCalc()" oninput="updateCalc()"></td>
+      <td><input type="number" class="kpi-ach" data-idx="${i}" placeholder="Enter achievement" step="any" value="${row.ach}" onchange="updateCalc()" oninput="updateCalc()"></td>
+      <td id="achPct${i}" style="font-family:var(--font-mono)">—</td>
+      <td id="pf${i}" style="font-family:var(--font-mono)">—</td>
+      <td><button class="btn-remove-row" onclick="removeKpiRow(${i})" title="Remove row" ${_kpiRows.length <= 3 ? 'disabled style="opacity:0.2;cursor:not-allowed"' : ''}>×</button></td>`;
+    tbody.appendChild(tr);
+ 
+    // If this is a Profitability KPI and H1 YTD is active, add an inline policy notice
+    if (row.curve === 'Profitability Curve') {
+      const _cycle = document.getElementById('payoutCycle')?.value || '';
+      if (_cycle === 'H1 YTD') {
+        const noticeTr = document.createElement('tr');
+        noticeTr.className = 'profit-h1-notice-row';
+        noticeTr.innerHTML = `
+          <td colspan="6" style="border:none;padding:0;background:var(--white)"></td>
+          <td colspan="3" style="padding:2px 6px 6px;border:none;background:var(--white)">
+            <div style="display:flex;align-items:flex-start;gap:5px;padding:5px 8px;
+              background:#E6F7ED;border-radius:6px;border-left:3px solid #00A651;
+              font-size:10px;color:#005C2E;line-height:1.4;">
+              <span style="flex-shrink:0">📋</span>
+              <span>As per SIP Policy, Profitability KPI paid annually — set to <strong>0%</strong> for H1 YTD.</span>
+            </div>
+          </td>`;
+        tbody.appendChild(noticeTr);
+      }
+    }
+  });
+ 
+  // ── Add-row control as a table row (only when < 4 rows) ──
+  if (_kpiRows.length < 4) {
+    const addTr = document.createElement('tr');
+    addTr.id = 'addKpiTr';
+    addTr.innerHTML = `
+      <td colspan="9" style="padding:4px 8px;border-top:1px dashed var(--gray-200);background:var(--white)">
+        <button class="btn-add-kpi" id="btnAddKpiRow" onclick="addKpiRow()" style="width:100%;justify-content:space-between;border-radius:4px;padding:5px 12px">
+          <span style="display:flex;align-items:center;gap:6px"><span style="font-size:15px;line-height:1">+</span> Add KPI Row</span>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span style="display:flex;gap:3px" id="kpiDots">
+              <span class="kpi-dot min active" id="kpiDot0"></span>
+              <span class="kpi-dot min active" id="kpiDot1"></span>
+              <span class="kpi-dot min active" id="kpiDot2"></span>
+              <span class="kpi-dot" id="kpiDot3"></span>
+            </span>
+            <span style="font-size:11px;color:var(--gray-400)" id="kpiRowCountHint">${_kpiRows.length}/4 rows</span>
+          </span>
+        </button>
+      </td>`;
+    tbody.appendChild(addTr);
+  } else {
+    // At max — clear any stale button reference
+    const old = document.getElementById('btnAddKpiRow');
+    if (old) old.closest('tr')?.remove();
+  }
+ 
+  // Update total weight
+  const totalW = _kpiRows.filter(r => r.name).reduce((s, r) => s + r.weight, 0);
+  document.getElementById('totalWeight').textContent = totalW > 0 ? (totalW * 100).toFixed(0) + '%' : '—';
+ 
+  // Dots are rebuilt inline in the add-row tr above; nothing extra needed here
+}
+ 
+function onKpiDropdownChange(selectEl, rowIdx) {
+  const name = selectEl.value;
+  if (!name) {
+    _kpiRows[rowIdx] = { name: '', weight: 0, curve: '', target: _kpiRows[rowIdx].target, ach: _kpiRows[rowIdx].ach };
+  } else {
+    // Enforce single-use restriction for Profitable Growth & Individual Growth
+    const SINGLE_USE = new Set(['Profitable Growth', 'Individual Growth']);
+    if (SINGLE_USE.has(name)) {
+      const alreadyUsed = _kpiRows.some((r, idx) => idx !== rowIdx && r.name === name);
+      if (alreadyUsed) {
+        // Revert the select to its previous value and abort
+        selectEl.value = _kpiRows[rowIdx].name || '';
+        return;
+      }
+    }
+    // Enforce Segment KAM plan restriction
+    const SEGMENT_KAM_RESTRICTED = new Set(['Profitable Growth', 'Individual Growth']);
+    if (document.getElementById('sipPlan').value === 'Segment KAM' && SEGMENT_KAM_RESTRICTED.has(name)) {
+      selectEl.value = _kpiRows[rowIdx].name || '';
+      return;
+    }
+    const plan = document.getElementById('sipPlan').value;
+    const planKpis = getKpisForPlan(plan);
+    const found = planKpis.find(k => k.name === name) || getAllKpiOptions().find(k => k.name === name);
+    let w = found ? Math.round(found.weight * 100) : 20;
+    w = Math.max(20, Math.min(60, Math.round(w / 10) * 10));
+    _kpiRows[rowIdx] = { name, weight: w / 100, curve: found ? found.curve : '', target: _kpiRows[rowIdx].target, ach: _kpiRows[rowIdx].ach };
+  }
+  rebuildKpiTableDOM();
+  updateCalc();
+  if (_kpiRows[rowIdx].name) onKpiDropdownSelect(rowIdx, _kpiRows[rowIdx].name);
+}
+ 
+function onWeightChange(selectEl, rowIdx) {
+  const w = parseInt(selectEl.value) || 0;
+  _kpiRows[rowIdx].weight = w / 100;
+  updateCalc();
+}
+ 
+function onKpiDropdownSelect(rowIdx, name) {
+  _currentKpiIdx = rowIdx;
+  document.querySelectorAll('.kpi-row').forEach(r => r.classList.remove('kpi-row-selected'));
+  const rows = document.querySelectorAll('.kpi-row');
+  if (rows[rowIdx]) rows[rowIdx].classList.add('kpi-row-selected');
+ 
+  const row = _kpiRows[rowIdx];
+  if (!row || !row.name) return;
+ 
+  const tEl = document.querySelectorAll('.kpi-target')[rowIdx];
+  const aEl = document.querySelectorAll('.kpi-ach')[rowIdx];
+  const t = parseFloat(tEl?.value) || 0;
+  const a = parseFloat(aEl?.value) || 0;
+  const achPct = t !== 0 ? (a / t) * 100 : null;
+ 
+  // Only update Reports panel if Reports page is open
+  if (document.getElementById('page-reports')?.classList.contains('active')) {
+    renderCurvePanel(row.curve, achPct, row.name, t, a);
+  }
+}
+ 
+function addKpiRow() {
+  if (_kpiRows.length >= 4) return;
+  _kpiRows.push({ name: '', weight: 0, curve: '', target: '', ach: '' });
+  rebuildKpiTableDOM();
+  updateCalc();
+}
+ 
+function removeKpiRow(idx) {
+  if (_kpiRows.length <= 3) return;
+  _kpiRows.splice(idx, 1);
+  if (_currentKpiIdx !== null) {
+    if (_currentKpiIdx === idx) _currentKpiIdx = null;
+    else if (_currentKpiIdx > idx) _currentKpiIdx--;
+  }
+  rebuildKpiTableDOM();
+  updateCalc();
+}
+ 
+// ═══════════════════════════════════════════
+//  KPI SELECTION & PAY CURVE DISPLAY
+// ═══════════════════════════════════════════
+ 
+let _currentKpiIdx = null;
+ 
+const CURVE_COLORS = {
+  'Sales & Orders Curve':      '#00A651',
+  'Segment OB Curve':          '#007A3D',
+  'Profitability Curve':       '#6CC24A',
+  'Performance Payout Curve':  '#4A4A4A',
+};
+ 
+// ── REPORTS PAGE ──────────────────────────
+function initReportsPage() {
+  cfg = loadConfig();
+  const plan = document.getElementById('sipPlan').value;
+  document.getElementById('reportActivePlan').textContent = plan || '—';
+ 
+  // Only show KPIs that are actually selected in the Client View.
+  // Each entry gets _rowIndex so pill clicks can target the exact DOM row,
+  // even when the same KPI name appears more than once.
+  const activeKpis = _kpiRows
+    .map((r, i) => ({ ...r, _rowIndex: i }))
+    .filter(r => r.name && r.curve);
+  const pillsContainer = document.getElementById('reportKpiPills');
+  pillsContainer.innerHTML = '';
+ 
+  // Count how many times each KPI name appears so duplicates can be labelled (e.g. "Account Growth #1")
+  const nameCount = {};
+  activeKpis.forEach(k => { nameCount[k.name] = (nameCount[k.name] || 0) + 1; });
+  const nameOccurrence = {};
+ 
+  activeKpis.forEach((k, activeIdx) => {
+    // Build pill label — append "#N" only when the same name appears more than once
+    nameOccurrence[k.name] = (nameOccurrence[k.name] || 0) + 1;
+    const pillLabel = nameCount[k.name] > 1
+      ? `${k.name} #${nameOccurrence[k.name]}`
+      : k.name;
+ 
+    // The real position of this row inside _kpiRows (needed for DOM target/ach lookup)
+    const rowIndex = k._rowIndex;
+ 
+    const pill = document.createElement('button');
+    pill.className = 'curve-kpi-pill';
+    pill.textContent = pillLabel;
+    pill.style.cssText = `border-color:${CURVE_COLORS[k.curve] || '#D9D9D9'}55`;
+    pill.onclick = () => {
+      pillsContainer.querySelectorAll('.curve-kpi-pill').forEach(p => {
+        p.classList.remove('active');
+        p.style.background = '';
+        p.style.color = '';
+        p.style.borderColor = `${CURVE_COLORS[k.curve] || '#D9D9D9'}55`;
+      });
+      pill.classList.add('active');
+      const c = CURVE_COLORS[k.curve] || '#00A651';
+      pill.style.background = c;
+      pill.style.color = '#fff';
+      pill.style.borderColor = c;
+ 
+      // Use the exact row index — works correctly even for duplicate KPI names
+      let achPct = null;
+      let rawTarget = null, rawAch = null;
+      const tEl = document.querySelectorAll('.kpi-target')[rowIndex];
+      const aEl = document.querySelectorAll('.kpi-ach')[rowIndex];
+      rawTarget = parseFloat(tEl?.value) || 0;
+      rawAch    = parseFloat(aEl?.value) || 0;
+      if (rawTarget !== 0) achPct = (rawAch / rawTarget) * 100;
+ 
+      renderCurvePanel(k.curve, achPct, pillLabel, rawTarget, rawAch);
+    };
+    pillsContainer.appendChild(pill);
+  });
+ 
+  // Show a hint if no KPIs are selected in Client View yet
+  if (activeKpis.length === 0) {
+    pillsContainer.innerHTML = `<span style="font-size:12px;color:var(--gray-400);font-style:italic">
+      No KPIs selected — go to Client View and select your KPIs first.</span>`;
+  }
+ 
+  renderAllCurvesSummary();
+ 
+  // Reset header
+  document.getElementById('reportCurvePanelTitle').textContent = 'Select a KPI above';
+  document.getElementById('reportCurveNameBadge').textContent  = '';
+  document.getElementById('reportCurvePanelBody').innerHTML =
+    `<div class="no-kpi-selected"><div class="icon">📊</div><div>Select a KPI pill above to view its Pay Curve</div></div>`;
+ 
+  // Auto-click first pill
+  const first = pillsContainer.querySelector('.curve-kpi-pill');
+  if (first) first.click();
+}
+ 
+function renderAllCurvesSummary() {
+  const container = document.getElementById('reportAllCurves');
+  container.innerHTML = '';
+  const curveNames = Object.keys(cfg.curves);
+  document.getElementById('reportAllCurvesBadge').textContent = curveNames.length + ' curves';
+ 
+  // 2-column grid wrapper
+  container.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:0;';
+ 
+  curveNames.forEach((curveName, ci) => {
+    const curve  = cfg.curves[curveName];
+    const color  = CURVE_COLORS[curveName] || '#00A651';
+    const isRightCol  = ci % 2 === 1;
+    const isLastRow   = ci >= curveNames.length - 2;
+ 
+    // Border logic: right cells get left border; bottom row loses bottom border
+    const borderLeft   = isRightCol  ? 'border-left:1px solid var(--gray-200);' : '';
+    const borderBottom = !isLastRow  ? 'border-bottom:1px solid var(--gray-200);' : '';
+ 
+    const rows = (curveName === 'Profitability Curve')
+      ? [
+          { range: 'Ach ≤ 99',     pf: '0.00x', note: 'Zero' },
+          { range: '99 < Ach < 101', pf: '1+(Ach−100)', note: 'Ramp' },
+          { range: 'Ach ≥ 101',    pf: '2.00x', note: 'Cap' },
+        ].map(r => `<tr>
+          <td colspan="2" style="font-size:11px">${r.range}</td>
+          <td colspan="2" style="font-family:var(--font-mono);font-size:11px;color:var(--navy)">${r.pf}</td>
+          <td style="font-size:10px;color:var(--gray-600)">${r.note}</td>
+        </tr>`).join('')
+      : curve.map(band => {
+          const minD = band.min <= -900 ? '−∞' : (band.min * 100).toFixed(0) + '%';
+          const maxD = band.max >= 900  ? '∞'  : (band.max * 100).toFixed(0) + '%';
+          const isZero = band.minP === 0 && band.maxP === 0;
+          const isCap  = band.max >= 90;
+          const rowStyle = isZero ? 'opacity:0.55' : isCap ? 'font-weight:600' : '';
+          return `<tr style="${rowStyle}">
+            <td style="font-family:var(--font-mono);font-size:11px">${minD}</td>
+            <td style="font-family:var(--font-mono);font-size:11px">${maxD}</td>
+            <td style="font-family:var(--font-mono);font-size:11px;color:${isZero?'var(--gray-400)':isCap?color:'var(--gray-800)'}">${band.minP.toFixed(2)}x</td>
+            <td style="font-family:var(--font-mono);font-size:11px;color:${isZero?'var(--gray-400)':isCap?color:'var(--gray-800)'}">${band.maxP.toFixed(2)}x</td>
+            <td style="font-family:var(--font-mono);font-size:11px">${band.rate === 0 ? '<span style="color:var(--gray-300)">—</span>' : band.rate.toFixed(2)}</td>
+          </tr>`;
+        }).join('');
+ 
+    // Max PF stat pill
+    const maxPF = Math.max(...curve.map(b => b.maxP));
+    // Threshold where first payout starts — for Profitability Curve show formula threshold
+    let startPct;
+    if (curveName === 'Profitability Curve') {
+      startPct = 'Ach ≥ Target−1';
+    } else {
+      const startBand = curve.find(b => b.maxP > 0);
+      startPct = startBand ? (startBand.min * 100).toFixed(0) + '%' : '—';
+    }
+ 
+    const miniSvg = (curveName === 'Profitability Curve')
+      ? buildMiniProfitabilitySvg(color, ci)
+      : buildMiniCurveSvg(curve, color, ci);
+ 
+    container.innerHTML += `
+      <div style="padding:20px 20px 16px;${borderLeft}${borderBottom}">
+ 
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;box-shadow:0 0 0 3px ${color}22"></span>
+            <strong style="font-size:13px;color:var(--gray-800)">${curveName}</strong>
+          </div>
+          <div style="display:flex;gap:6px">
+            <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;
+              background:${color}15;color:${color};border:1px solid ${color}30">
+              Max ${maxPF.toFixed(1)}x
+            </span>
+            <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;
+              background:var(--gray-100);color:var(--gray-600);border:1px solid var(--gray-200)">
+              Starts @ ${startPct}
+            </span>
+          </div>
+        </div>
+ 
+        <!-- Chart + Table side by side -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
+ 
+          <!-- Mini chart -->
+          <div style="background:var(--gray-100);border-radius:8px;padding:10px 8px 6px;border:1px solid var(--gray-200)">
+            ${miniSvg}
+          </div>
+ 
+          <!-- Table -->
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:11px">
+              <thead>
+                <tr>
+                  <th style="padding:5px 6px;text-align:left;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:0.4px;color:var(--gray-600);
+                    background:var(--gray-100);border-bottom:1px solid var(--gray-200)">Ach%</th>
+                  <th style="padding:5px 6px;text-align:left;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:0.4px;color:var(--gray-600);
+                    background:var(--gray-100);border-bottom:1px solid var(--gray-200)">To</th>
+                  <th style="padding:5px 6px;text-align:left;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:0.4px;color:var(--gray-600);
+                    background:var(--gray-100);border-bottom:1px solid var(--gray-200)">Min PF</th>
+                  <th style="padding:5px 6px;text-align:left;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:0.4px;color:var(--gray-600);
+                    background:var(--gray-100);border-bottom:1px solid var(--gray-200)">Max PF</th>
+                  <th style="padding:5px 6px;text-align:left;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:0.4px;color:var(--gray-600);
+                    background:var(--gray-100);border-bottom:1px solid var(--gray-200)">Rate</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+  });
+ 
+  // If odd number of curves, fill the last cell
+  if (curveNames.length % 2 !== 0) {
+    container.innerHTML += `<div style="border-left:1px solid var(--gray-200)"></div>`;
+  }
+}
+ 
+// ── Compact mini chart for Profitability Curve (formula-based, T=100) ──
+function buildMiniProfitabilitySvg(color, idx) {
+  const W = 200, H = 110;
+  const PAD = { top: 18, right: 10, bottom: 26, left: 28 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+
+  const T = 100, xMin = 85, xMax = 112;
+  const yMax = 2.3;
+  const xS = v => PAD.left + ((v - xMin) / (xMax - xMin)) * chartW;
+  const yS = v => PAD.top + chartH - (v / yMax) * chartH;
+
+  function pfFromAch(a) {
+    if (a <= T - 1) return 0;
+    if (a >= T + 1) return 2;
+    return 1 + (a - T);
+  }
+
+  // Zone fills
+  const zoneZero = `<rect x="${xS(xMin).toFixed(1)}" y="${PAD.top}" width="${(xS(T-1) - xS(xMin)).toFixed(1)}" height="${chartH}" fill="#FDEAED" opacity="0.6"/>`;
+  const zoneRamp = `<rect x="${xS(T-1).toFixed(1)}" y="${PAD.top}" width="${(xS(T+1) - xS(T-1)).toFixed(1)}" height="${chartH}" fill="#E6F7ED" opacity="0.5"/>`;
+  const zoneCap  = `<rect x="${xS(T+1).toFixed(1)}" y="${PAD.top}" width="${(xS(xMax) - xS(T+1)).toFixed(1)}" height="${chartH}" fill="#E6F2FA" opacity="0.6"/>`;
+
+  // Boundary dashes
+  const bLine1 = `<line x1="${xS(T-1).toFixed(1)}" y1="${PAD.top}" x2="${xS(T-1).toFixed(1)}" y2="${PAD.top+chartH}" stroke="#D9D9D9" stroke-width="0.75" stroke-dasharray="3,2"/>`;
+  const bLine2 = `<line x1="${xS(T+1).toFixed(1)}" y1="${PAD.top}" x2="${xS(T+1).toFixed(1)}" y2="${PAD.top+chartH}" stroke="#D9D9D9" stroke-width="0.75" stroke-dasharray="3,2"/>`;
+
+  // Target ref
+  const refX = xS(T).toFixed(1);
+  const refLine = `<line x1="${refX}" y1="${PAD.top}" x2="${refX}" y2="${PAD.top+chartH}" stroke="${color}" stroke-width="1" stroke-dasharray="4,2" opacity="0.5"/>
+    <text x="${refX}" y="${PAD.top - 4}" text-anchor="middle" font-size="7.5" font-family="'Segoe UI',system-ui,sans-serif" fill="${color}" font-weight="700">100</text>`;
+
+  // Y ticks
+  const yTicks = [];
+  for (let v = 0; v <= 2.01; v++) {
+    const gy = yS(v).toFixed(1);
+    yTicks.push(`<line x1="${PAD.left}" y1="${gy}" x2="${PAD.left+chartW}" y2="${gy}" stroke="#D9D9D9" stroke-width="0.6"/>`);
+    yTicks.push(`<text x="${PAD.left-4}" y="${(parseFloat(gy)+3).toFixed(1)}" text-anchor="end" font-size="8" font-family="'Segoe UI',system-ui,sans-serif" fill="#7A7A7A">${v}x</text>`);
+  }
+
+  // X tick labels: 85, 99, 101, 112 — 100 is already shown as the ref line above chart
+  // 99 right-anchored and 101 left-anchored so they sit on opposite sides of the boundary
+  const xTickDefs = [
+    { v: xMin, anchor: 'middle', bold: false },
+    { v: T-1,  anchor: 'end',    bold: true  },
+    { v: T+1,  anchor: 'start',  bold: true  },
+    { v: xMax, anchor: 'middle', bold: false },
+  ];
+  const xTicks = xTickDefs.map(({ v, anchor, bold }) =>
+    `<text x="${xS(v).toFixed(1)}" y="${PAD.top + chartH + 11}"
+      text-anchor="${anchor}"
+      font-size="8" font-family="'Segoe UI',system-ui,sans-serif"
+      fill="${bold ? '#444444' : '#7A7A7A'}"
+      font-weight="${bold ? '600' : '400'}">${v}</text>`
+  ).join('');
+
+  // Curve points
+  const pts = [];
+  for (let i = 0; i <= 160; i++) {
+    const a = xMin + (xMax - xMin) * i / 160;
+    pts.push(`${xS(a).toFixed(1)},${yS(pfFromAch(a)).toFixed(1)}`);
+  }
+
+  const gId = `mprof${idx}_${color.replace('#','')}`;
+  const aPath = `M${xS(xMin).toFixed(1)},${yS(0).toFixed(1)} L${pts.join(' L')} L${xS(xMax).toFixed(1)},${yS(0).toFixed(1)} Z`;
+
+  // Cap label
+  const capLabel = `<text x="${(PAD.left + chartW - 2).toFixed(1)}" y="${(yS(2) - 4).toFixed(1)}" text-anchor="end" font-size="8.5" font-family="'Segoe UI',system-ui,sans-serif" fill="${color}" font-weight="700">2.0x</text>`;
+
+  // "T=100" notice at bottom
+  const notice = `<text x="${(PAD.left + chartW/2).toFixed(1)}" y="${H - 1}" text-anchor="middle" font-size="7.5" font-family="'Segoe UI',system-ui,sans-serif" fill="#7A4700" font-style="italic">Target assumed = 100</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible">
+  <defs>
+    <linearGradient id="${gId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="${color}" stop-opacity="0.28"/>
+      <stop offset="80%" stop-color="${color}" stop-opacity="0.03"/>
+    </linearGradient>
+    <filter id="mShadow${idx}">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="${color}" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect x="${PAD.left}" y="${PAD.top}" width="${chartW}" height="${chartH}" fill="white"/>
+  ${zoneZero}${zoneRamp}${zoneCap}
+  ${yTicks.join('')}
+  ${bLine1}${bLine2}${refLine}
+  <path d="${aPath}" fill="url(#${gId})"/>
+  <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#mShadow${idx})" opacity="0.4"/>
+  <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  ${capLabel}
+  <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top+chartH}" stroke="#CBD5E1" stroke-width="1"/>
+  <line x1="${PAD.left}" y1="${PAD.top+chartH}" x2="${PAD.left+chartW}" y2="${PAD.top+chartH}" stroke="#CBD5E1" stroke-width="1"/>
+  ${xTicks}
+  ${notice}
+</svg>`;
+}
+
+// ── Compact mini chart for Quick Reference grid ──────────────────────────────
+function buildMiniCurveSvg(curve, color, idx) {
+  const W = 200, H = 110;
+  const PAD = { top: 14, right: 10, bottom: 24, left: 30 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+ 
+  // Dynamic ranges
+  const visXMin   = 0;
+  const lastFinite = [...curve].reverse().find(b => b.max < 90);
+  const dataXMax   = lastFinite ? lastFinite.max : 2.0;
+  const visXMax    = dataXMax + dataXMax * 0.12;
+  const dataPFMax  = Math.max(...curve.map(b => b.maxP));
+  const visYMax    = dataPFMax + dataPFMax * 0.18;
+ 
+  const xS = v => PAD.left + ((v - visXMin) / (visXMax - visXMin)) * chartW;
+  const yS = v => PAD.top  + chartH - (v / visYMax) * chartH;
+ 
+  // Band zone fills
+  const bandZoneColors = ['#FDEAED','#FEF3DC','#F4F4F4','#E6F7ED','#E6F2FA','#F0FAE8'];
+  const zones = curve.map((band, i) => {
+    const x1 = xS(Math.max(band.min, visXMin));
+    const x2 = xS(Math.min(band.max >= 90 ? visXMax : band.max, visXMax));
+    if (x2 <= x1) return '';
+    return `<rect x="${x1.toFixed(1)}" y="${PAD.top}" width="${(x2-x1).toFixed(1)}" height="${chartH}"
+      fill="${bandZoneColors[Math.min(i, bandZoneColors.length-1)]}" opacity="0.6"/>`;
+  }).join('');
+ 
+  // Band boundary dashes
+  const bLines = curve.slice(0,-1).map(band => {
+    if (band.max >= 90 || band.max > visXMax) return '';
+    const bx = xS(band.max).toFixed(1);
+    return `<line x1="${bx}" y1="${PAD.top}" x2="${bx}" y2="${PAD.top + chartH}"
+      stroke="#D9D9D9" stroke-width="0.75" stroke-dasharray="3,2"/>`;
+  }).join('');
+ 
+  // X ticks — fixed set: 80%, 100%, 120% always shown; extras added only if they fit
+  // These three are the key thresholds and are always well-spaced on this chart width
+  const _mustShow  = new Set([0.8, 1.0, 1.2]);
+  const _allTickVals = [...new Set(curve.map(b => b.min).concat(
+    curve.filter(b => b.max < 90).map(b => b.max)
+  ))].filter(v => v >= 0 && v <= visXMax).sort((a,b) => a - b);
+  // Estimate pixel half-width of a label at font-size 8
+  const _halfW = v => ((v * 100).toFixed(0).length + 1) * 2.8 + 3; // chars * ~2.8px half + gutter
+  // Place must-show ticks first, then admit extras that don't overlap
+  const _placed = [];
+  const _overlaps = (v) => _placed.some(p =>
+    Math.abs(xS(v) - xS(p)) < (_halfW(v) + _halfW(p))
+  );
+  _allTickVals.filter(v => _mustShow.has(v)).forEach(v => { if (!_overlaps(v)) _placed.push(v); });
+  _allTickVals.filter(v => !_mustShow.has(v)).forEach(v => { if (!_overlaps(v)) _placed.push(v); });
+  const xTicks = _placed.map(v => {
+    const gx     = xS(v).toFixed(1);
+    const isKey  = _mustShow.has(v);
+    const is100  = v === 1.0;
+    return `<text x="${gx}" y="${PAD.top + chartH + 11}" text-anchor="middle"
+      font-size="8" font-family="'Segoe UI',system-ui,sans-serif"
+      fill="${is100 ? '#444444' : isKey ? '#555555' : '#7A7A7A'}"
+      font-weight="${isKey ? '600' : '400'}">${(v*100).toFixed(0)}%</text>`;
+  }).join('');
+ 
+  // Y ticks — 2 or 3 levels
+  const yStep  = visYMax <= 2.5 ? 1.0 : 1.0;
+  const yTicks = [];
+  for (let v = 0; v <= dataPFMax + 0.01; v += yStep) {
+    const gy = yS(v).toFixed(1);
+    yTicks.push(`<line x1="${PAD.left}" y1="${gy}" x2="${PAD.left + chartW}" y2="${gy}"
+      stroke="#D9D9D9" stroke-width="0.6"/>`);
+    yTicks.push(`<text x="${PAD.left - 4}" y="${(parseFloat(gy)+3).toFixed(1)}" text-anchor="end"
+      font-size="8" font-family="'Segoe UI',system-ui,sans-serif" fill="#7A7A7A">${v.toFixed(0)}x</text>`);
+  }
+ 
+  // 100% reference
+  const ref100 = xS(1.0).toFixed(1);
+  const refLine = `<line x1="${ref100}" y1="${PAD.top}" x2="${ref100}" y2="${PAD.top + chartH}"
+    stroke="${color}" stroke-width="1" stroke-dasharray="4,2" opacity="0.45"/>
+    <text x="${ref100}" y="${PAD.top - 3}" text-anchor="middle"
+      font-size="7.5" font-family="'Segoe UI',system-ui,sans-serif"
+      fill="${color}" font-weight="600" opacity="0.75">100%</text>`;
+ 
+  // Curve points
+  const pts = [];
+  for (let i = 0; i <= 160; i++) {
+    const x = visXMin + (visXMax - visXMin) * i / 160;
+    pts.push(`${xS(x).toFixed(1)},${yS(calcPfFromCurve(x, curve)).toFixed(1)}`);
+  }
+ 
+  // Area fill
+  const gId = `mcg${idx}_${color.replace('#','')}`;
+  const aFirst = pts[0].split(',')[0];
+  const aLast  = pts[pts.length-1].split(',')[0];
+  const aPath  = `M${aFirst},${yS(0).toFixed(1)} L${pts.join(' L')} L${aLast},${yS(0).toFixed(1)} Z`;
+ 
+  // Cap label — show max PF value on flat cap plateau
+  const capBand  = [...curve].reverse().find(b => b.maxP === dataPFMax && b.max >= 90);
+  const capLabel = capBand
+    ? `<text x="${PAD.left + chartW - 2}" y="${(yS(dataPFMax) - 4).toFixed(1)}" text-anchor="end"
+        font-size="8.5" font-family="'Segoe UI',system-ui,sans-serif"
+        fill="${color}" font-weight="700">${dataPFMax.toFixed(1)}x</text>`
+    : '';
+ 
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible">
+  <defs>
+    <linearGradient id="${gId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="${color}" stop-opacity="0.28"/>
+      <stop offset="80%" stop-color="${color}" stop-opacity="0.03"/>
+    </linearGradient>
+    <filter id="mShadow${idx}">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="${color}" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+ 
+  <!-- White chart area -->
+  <rect x="${PAD.left}" y="${PAD.top}" width="${chartW}" height="${chartH}" fill="white"/>
+ 
+  <!-- Band zones -->
+  ${zones}
+ 
+  <!-- Y grid + labels -->
+  ${yTicks.join('')}
+ 
+  <!-- Band boundaries -->
+  ${bLines}
+ 
+  <!-- 100% ref -->
+  ${refLine}
+ 
+  <!-- Area fill -->
+  <path d="${aPath}" fill="url(#${gId})"/>
+ 
+  <!-- Curve shadow -->
+  <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"
+    stroke-linejoin="round" stroke-linecap="round" filter="url(#mShadow${idx})" opacity="0.4"/>
+ 
+  <!-- Curve line -->
+  <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2"
+    stroke-linejoin="round" stroke-linecap="round"/>
+ 
+  <!-- Cap label -->
+  ${capLabel}
+ 
+  <!-- Axes -->
+  <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top + chartH}"
+    stroke="#CBD5E1" stroke-width="1"/>
+  <line x1="${PAD.left}" y1="${PAD.top + chartH}" x2="${PAD.left + chartW}" y2="${PAD.top + chartH}"
+    stroke="#CBD5E1" stroke-width="1"/>
+ 
+  <!-- X tick labels -->
+  ${xTicks}
+</svg>`;
+}
+ 
+function renderCurvePanel(curveName, currentAchPct, kpiName, rawTarget, rawAch) {
+  const curve = cfg.curves[curveName];
+  if (!curve) {
+    document.getElementById('reportCurvePanelBody').innerHTML =
+      `<div class="no-kpi-selected"><div>Curve data not found for "${curveName}"</div></div>`;
+    return;
+  }
+  document.getElementById('reportCurvePanelTitle').textContent = kpiName;
+  document.getElementById('reportCurveNameBadge').textContent  = curveName;
+ 
+  // ── Determine cycle flags (same logic as Client Calc) ──
+  const _cycle     = document.getElementById('payoutCycle')?.value || '';
+  const isH1       = _cycle === 'H1 YTD';
+  const isProfit   = curveName === 'Profitability Curve';
+ 
+  const color = CURVE_COLORS[curveName] || '#00A651';
+  // Offer Growth & Account Growth use Sales/Segment OB curves whose X range fits 20% steps cleanly
+  const forceXStep = (kpiName === 'Offer Growth' || kpiName === 'Account Growth') ? 0.20 : null;
+  // Profitability Curve: draw using the dedicated formula, not the band table
+  const svgHtml = (isProfit && !isH1)
+    ? buildProfitabilityCurveSvg(rawTarget, rawAch, color)
+    : buildCurveSvg(curve, currentAchPct, color, forceXStep);
+ 
+  let activeBand = -1;
+  if (currentAchPct !== null) {
+    const ratio = currentAchPct / 100;
+    curve.forEach((band, i) => { if (ratio >= band.min && ratio < band.max) activeBand = i; });
+    if (activeBand === -1 && currentAchPct / 100 >= curve[curve.length - 1].min) activeBand = curve.length - 1;
+  }
+ 
+  // For Profitability Curve, replace band table with formula breakdown rows
+  let tableRows;
+  if (isProfit) {
+    const diff   = (rawTarget != null && rawAch != null) ? (rawAch - rawTarget) : null;
+    const hasVals = diff !== null;
+    // Compute actual PF values for each band when simulation values are available
+    const pfZero   = '0.00x';
+    const pfLinear = hasVals && diff > -1 && diff < 1
+      ? (1 + diff).toFixed(2) + 'x'
+      : hasVals ? (diff <= -1 ? '0.00x' : '2.00x') : '1 + (Ach − Target)';
+    const pfCapped = '2.00x';
+    // Actual computed value for the active band (shown as a secondary label)
+    const actualPF = hasVals ? calcProfitabilityPF(rawTarget, rawAch).toFixed(2) + 'x' : null;
+    const rows = [
+      {
+        label:  hasVals ? `Ach ≤ ${(rawTarget - 1).toFixed(2)}` : 'Ach ≤ Target − 1',
+        minPF:  pfZero, maxPF: pfZero,
+        note:   'Zero zone',
+        active: diff !== null && diff <= -1
+      },
+      {
+        label:  hasVals ? `${(rawTarget - 1).toFixed(2)} < Ach < ${(rawTarget + 1).toFixed(2)}` : 'Target−1 < Ach < Target+1',
+        minPF:  hasVals ? '0.00x' : '0.00x',
+        maxPF:  hasVals ? '2.00x' : '2.00x',
+        note:   'Linear ramp',
+        active: diff !== null && diff > -1 && diff < 1
+      },
+      {
+        label:  hasVals ? `Ach ≥ ${(rawTarget + 1).toFixed(2)}` : 'Ach ≥ Target + 1',
+        minPF:  pfCapped, maxPF: pfCapped,
+        note:   'Capped',
+        active: diff !== null && diff >= 1
+      },
+    ];
+    tableRows = rows.map(r => {
+      const pfCell = r.active && actualPF
+        ? `<strong style="color:var(--blue)">${actualPF}</strong>`
+        : r.active
+          ? r.minPF
+          : (r.minPF === r.maxPF ? r.minPF : r.minPF + ' → ' + r.maxPF);
+      return `<tr class="${r.active ? 'active-band' : ''}">
+        <td colspan="2">${r.active ? '<span class="curve-current-dot"></span>' : ''}${r.label}</td>
+        <td colspan="2">${pfCell}</td>
+        <td><span style="font-size:10px;color:var(--gray-600)">${r.note}</span></td>
+      </tr>`;
+    }).join('');
+  } else {
+    tableRows = curve.map((band, i) => {
+      const isActive = i === activeBand;
+      const minD = band.min <= -900 ? '−∞' : (band.min * 100).toFixed(0) + '%';
+      const maxD = band.max >= 900  ? '+∞' : (band.max * 100).toFixed(0) + '%';
+      return `<tr class="${isActive ? 'active-band' : ''}">
+        <td>${isActive ? '<span class="curve-current-dot"></span>' : ''}${minD}</td>
+        <td>${maxD}</td>
+        <td>${band.minP.toFixed(2)}x</td>
+        <td>${band.maxP.toFixed(2)}x</td>
+        <td>${band.rate === 0 ? '<span style="color:var(--gray-400)">—</span>' : band.rate.toFixed(2)}</td>
+      </tr>`;
+    }).join('');
+  }
+ 
+  // ── Compute payout factor using the SAME logic as Client Calc ──
+  let currentInfo;
+  if (currentAchPct !== null) {
+    let pf;
+    let pfNote = '';
+ 
+    if (isH1 && isProfit) {
+      // H1 policy: Profitability KPI is always 0% in H1 YTD
+      pf = 0;
+      pfNote = `<div style="margin-top:8px;padding:8px 12px;background:#F0FDF4;border-radius:6px;
+        border-left:3px solid #00A651;font-size:11px;color:#005C2E;display:flex;align-items:flex-start;gap:6px">
+        <span>📋</span>
+        <span>As per SIP Policy, Profitability KPI is paid annually — set to <strong>0%</strong> for H1 YTD.</span>
+      </div>`;
+    } else if (isProfit && rawTarget != null && rawAch != null) {
+      // Use the dedicated Profitability formula (not curve table interpolation)
+      pf = calcProfitabilityPF(rawTarget, rawAch);
+    } else {
+      // Standard curve interpolation for all other KPIs
+      pf = getPayoutFactor(currentAchPct, curveName);
+    }
+ 
+    // H1 overall cap at 100% (shown as an informational note here since this is per-KPI view)
+    const pfDisplay = (pf * 100).toFixed(1) + '%';
+ 
+    // For Profitability KPI the formula operates on raw margin % point values (e.g. Target=18.0, Ach=19.5),
+    // so showing the ratio-based "Achievement = 150%" is misleading. Show raw values + pp difference instead.
+    let achievementDisplay;
+    if (isProfit && rawTarget != null && rawAch != null && !isH1) {
+      const diff    = rawAch - rawTarget;
+      const diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' pp';
+      achievementDisplay = `Target = <strong>${rawTarget}</strong>, Achieved = <strong>${rawAch}</strong> <span style="font-size:11px;color:var(--gray-600)">(${diffStr})</span>`;
+    } else {
+      achievementDisplay = `Achievement = <strong>${currentAchPct.toFixed(1)}%</strong>`;
+    }
+ 
+    currentInfo = `<div style="margin-top:12px;padding:10px 14px;background:rgba(0,114,206,0.07);border-radius:var(--radius);
+        border-left:3px solid var(--blue);font-size:12px;color:#004E8F">
+        <strong>Current Position:</strong> ${achievementDisplay} →
+        Payout Factor = <strong>${pfDisplay}</strong>
+        ${isH1 && !isProfit && pf > 1.0
+          ? ' <span style="font-size:11px;color:#7A4700;background:#FFF7ED;padding:2px 7px;border-radius:10px;margin-left:6px">🔒 H1 cap: applies 100% on composite</span>'
+          : ''}
+       </div>${pfNote}`;
+  } else {
+    currentInfo = `<div style="margin-top:12px" class="curve-hint">Go to Client View, enter Target &amp; Achievement to see your current position here</div>`;
+  }
+ 
+  // Build "Your position" badge for the title bar (only when there's a position to show)
+  const hasPosition = currentAchPct !== null;
+  const positionBadge = hasPosition
+    ? `<span style="display:inline-flex;align-items:center;gap:5px;margin-left:10px;
+        padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+        background:#FEF3DC;color:#7A4700;border:1px solid #F5A623">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#F59E0B;flex-shrink:0"></span>
+        Your position
+       </span>`
+    : '';
+ 
+  document.getElementById('reportCurvePanelBody').innerHTML = `
+    <div class="curve-viz-wrap">
+      <div class="curve-chart-wrap">
+        <div class="curve-chart-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+          <span class="dot-curve" style="background:${color}"></span>
+          <span>Payout Factor vs Achievement %</span>
+          ${positionBadge}
+        </div>
+        ${svgHtml}
+      </div>
+      <div class="curve-table-wrap">
+        <table class="curve-detail-table">
+          <thead><tr><th>Min Ach%</th><th>Max Ach%</th><th>Min PF</th><th>Max PF</th><th>Rate</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+        ${currentInfo}
+      </div>
+    </div>`;
+}
+ 
+
+// ═══════════════════════════════════════════
+//  PROFITABILITY CURVE — FORMULA-BASED SVG  (New PC style)
+//  X-axis : 85 – 112  (Achievement %, Target = 100)
+//  Y-axis : 0x – 2x
+//  Formula: Ach ≤ 99 → 0x | 99 < Ach < 101 → linear 0→2x | Ach ≥ 101 → 2x
+// ═══════════════════════════════════════════
+function buildProfitabilityCurveSvg(rawTarget, rawAch, color) {
+  const W = 460, H = 230;
+  const PAD = { top: 28, right: 32, bottom: 42, left: 44 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+
+  // Use actual target when available, else illustrative 100
+  const hasReal = rawTarget != null && rawTarget > 0 && rawAch != null;
+  const T = hasReal ? rawTarget : 100;   // pivot point
+
+  // Zone boundaries derived from actual target
+  const zLow  = T - 1;   // zero → ramp threshold
+  const zHigh = T + 1;   // ramp → cap threshold
+
+  // X domain: centre around T with equal margins
+  const margin = Math.max(T * 0.15, 15);
+  const xMin = Math.max(0, T - margin);
+  const xMax = T + margin;
+  const yMin = 0, yMax = 2.0;
+
+  const xS = v => PAD.left + ((v - xMin) / (xMax - xMin)) * chartW;
+  const yS = v => PAD.top  + chartH - ((v - yMin) / (yMax - yMin)) * chartH;
+
+  // Formula: payout factor from raw achievement value (same as calcProfitabilityPF)
+  function pfFromAch(a) {
+    if (a <= zLow)  return 0;
+    if (a >= zHigh) return 2;
+    return 1 + (a - T);   // linear 0→2 over zLow→zHigh
+  }
+
+  // ── Zone fills ──
+  const zoneZero = `<rect x="${xS(xMin).toFixed(1)}" y="${PAD.top.toFixed(1)}"
+    width="${Math.max(0, xS(zLow) - xS(xMin)).toFixed(1)}" height="${chartH}"
+    fill="#FDEAED" rx="0"/>`;
+  const zoneRamp = `<rect x="${xS(zLow).toFixed(1)}" y="${PAD.top.toFixed(1)}"
+    width="${Math.max(0, xS(zHigh) - xS(zLow)).toFixed(1)}" height="${chartH}"
+    fill="#E8F8EE" rx="0"/>`;
+  const zoneCap = `<rect x="${xS(zHigh).toFixed(1)}" y="${PAD.top.toFixed(1)}"
+    width="${Math.max(0, xS(xMax) - xS(zHigh)).toFixed(1)}" height="${chartH}"
+    fill="#E6F2FA" rx="0"/>`;
+
+  // ── Zone labels (centred inside each zone) ──
+  const lZero = `<text x="${((xS(xMin) + xS(zLow)) / 2).toFixed(1)}"
+    y="${(PAD.top + chartH * 0.72).toFixed(1)}"
+    text-anchor="middle" font-size="11" font-family="'Segoe UI',system-ui,sans-serif"
+    fill="#E8A0A8" font-weight="500" opacity="0.9">Zero</text>`;
+  const lRamp = `<text x="${((xS(zLow) + xS(zHigh)) / 2).toFixed(1)}"
+    y="${(PAD.top + chartH * 0.72).toFixed(1)}"
+    text-anchor="middle" font-size="11" font-family="'Segoe UI',system-ui,sans-serif"
+    fill="#5BAD7A" font-weight="500" opacity="0.9">Ramp</text>`;
+  const lCap = `<text x="${((xS(zHigh) + xS(xMax)) / 2).toFixed(1)}"
+    y="${(PAD.top + chartH * 0.72).toFixed(1)}"
+    text-anchor="middle" font-size="11" font-family="'Segoe UI',system-ui,sans-serif"
+    fill="#7AAFD4" font-weight="500" opacity="0.9">Cap</text>`;
+
+  // ── Dashed boundary lines at zLow and zHigh ──
+  const dLine = (xv) => `<line x1="${xS(xv).toFixed(1)}" y1="${PAD.top}"
+    x2="${xS(xv).toFixed(1)}" y2="${PAD.top + chartH}"
+    stroke="#BBBBBB" stroke-width="1" stroke-dasharray="5,3"/>`;
+
+  // ── Target reference line ──
+  const tx = xS(T).toFixed(1);
+  const tLabel = hasReal ? T.toFixed(1) : '100';
+  const refLine = `
+    <line x1="${tx}" y1="${PAD.top - 4}" x2="${tx}" y2="${PAD.top + chartH}"
+      stroke="${color}" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7"/>
+    <text x="${tx}" y="${PAD.top - 8}"
+      text-anchor="middle" font-size="12" font-family="'Segoe UI',system-ui,sans-serif"
+      fill="${color}" font-weight="700">${tLabel}</text>`;
+
+  // ── 2.0x cap label (top-right of cap zone) ──
+  const capLabel = `<text x="${(xS(xMax) - 4).toFixed(1)}" y="${(yS(2.0) - 6).toFixed(1)}"
+    text-anchor="end" font-size="13" font-family="'Segoe UI',system-ui,sans-serif"
+    fill="${color}" font-weight="700">2.0x</text>`;
+
+  // ── Y axis ticks: 0x, 1x, 2x ──
+  const yTicks = [0, 1, 2].map(v => {
+    const gy = yS(v).toFixed(1);
+    return `<text x="${(PAD.left - 6).toFixed(1)}" y="${(parseFloat(gy) + 3.5).toFixed(1)}"
+      text-anchor="end" font-size="10" font-family="'Segoe UI',system-ui,sans-serif"
+      fill="#999999">${v}x</text>
+    <line x1="${PAD.left}" y1="${gy}" x2="${(PAD.left + chartW).toFixed(1)}" y2="${gy}"
+      stroke="#EEEEEE" stroke-width="0.8"/>`;
+  }).join('');
+
+  // ── X axis ticks: xMin, zLow, zHigh, xMax ──
+  const fmt = v => Number.isInteger(v) ? String(v) : v.toFixed(1);
+  const xTickDefs = [
+    { v: xMin,  anchor: 'middle', bold: false },
+    { v: zLow,  anchor: 'end',    bold: true  },
+    { v: zHigh, anchor: 'start',  bold: true  },
+    { v: xMax,  anchor: 'middle', bold: false },
+  ];
+  const xTicks = xTickDefs.map(({ v, anchor, bold }) =>
+    `<text x="${xS(v).toFixed(1)}" y="${(PAD.top + chartH + 14).toFixed(1)}"
+      text-anchor="${anchor}"
+      font-size="10" font-family="'Segoe UI',system-ui,sans-serif"
+      fill="${bold ? '#444444' : '#999999'}"
+      font-weight="${bold ? '600' : '400'}">${fmt(v)}</text>`
+  ).join('');
+
+  // ── Curve polyline (dense samples across xMin→xMax) ──
+  const steps = 400;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const a  = xMin + (xMax - xMin) * (i / steps);
+    const pf = pfFromAch(a);
+    pts.push(`${xS(a).toFixed(1)},${yS(pf).toFixed(1)}`);
+  }
+
+  // ── Gradient area fill ──
+  const gradId   = 'profGradNew';
+  const areaPath = `M${xS(xMin).toFixed(1)},${yS(0).toFixed(1)} L${pts.join(' L')} L${xS(xMax).toFixed(1)},${yS(0).toFixed(1)} Z`;
+
+  // ── Marker dot — at actual Ach if provided, else at target midpoint ──
+  let markerAch;
+  if (hasReal) {
+    markerAch = Math.min(Math.max(rawAch, xMin), xMax);
+  } else {
+    markerAch = T;
+  }
+  const mPf = pfFromAch(markerAch);
+  const mx  = parseFloat(xS(markerAch).toFixed(1));
+  const my  = parseFloat(yS(mPf).toFixed(1));
+  const markerDot = `
+    <circle cx="${mx}" cy="${my}" r="8"  fill="${color}" opacity="0.18"/>
+    <circle cx="${mx}" cy="${my}" r="5"  fill="${color}" stroke="white" stroke-width="2"/>
+    <circle cx="${mx}" cy="${my}" r="2"  fill="white"/>`;
+
+  // Tooltip only when user has entered real values
+  let tooltip = '';
+  if (hasReal) {
+    const achPct  = ((rawAch / rawTarget) * 100).toFixed(1);
+    const pfLabel = mPf.toFixed(2) + 'x';
+    const boxW = 78, boxH = 28, boxR = 5;
+    const tipX = (mx + boxW + 12 > PAD.left + chartW) ? mx - boxW - 8 : mx + 8;
+    const tipY = Math.max(PAD.top + 2, my - boxH / 2);
+    tooltip = `
+      <rect x="${tipX}" y="${tipY}" width="${boxW}" height="${boxH}" rx="${boxR}"
+        fill="#222222" opacity="0.88"/>
+      <text x="${tipX + boxW/2}" y="${tipY + 11}" text-anchor="middle"
+        font-size="9" font-family="'Segoe UI',system-ui,sans-serif"
+        fill="#FFFFFF" font-weight="600">Ach: ${rawAch.toFixed(2)} (${achPct}%)</text>
+      <text x="${tipX + boxW/2}" y="${tipY + 22}" text-anchor="middle"
+        font-size="9" font-family="'Segoe UI',system-ui,sans-serif"
+        fill="#F5A623" font-weight="700">PF: ${pfLabel}</text>`;
+  }
+
+  // Caption: show actual target when real, else illustration note
+  const caption = hasReal
+    ? `<text x="${(PAD.left + chartW / 2).toFixed(1)}" y="${(H - 4).toFixed(1)}"
+        text-anchor="middle" font-size="10.5" font-family="'Segoe UI',system-ui,sans-serif"
+        fill="#005C2E" font-style="italic">Target = ${T.toFixed(2)} · Achieved = ${rawAch.toFixed(2)}</text>`
+    : `<text x="${(PAD.left + chartW / 2).toFixed(1)}" y="${(H - 4).toFixed(1)}"
+        text-anchor="middle" font-size="10.5" font-family="'Segoe UI',system-ui,sans-serif"
+        fill="#B07000" font-style="italic">Target assumed = 100 (for illustration)</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
+    id="curveSvg" style="width:100%;display:block;overflow:visible">
+  <defs>
+    <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="${color}" stop-opacity="0.22"/>
+      <stop offset="85%" stop-color="${color}" stop-opacity="0.02"/>
+    </linearGradient>
+    <filter id="profDotShadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="2"
+        flood-color="${color}" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- chart background -->
+  <rect x="${PAD.left}" y="${PAD.top}" width="${chartW}" height="${chartH}"
+    fill="white" rx="2"/>
+
+  <!-- zones -->
+  ${zoneZero}${zoneRamp}${zoneCap}
+
+  <!-- zone labels -->
+  ${lZero}${lRamp}${lCap}
+
+  <!-- y grid + labels -->
+  ${yTicks}
+
+  <!-- boundary dashes -->
+  ${dLine(99)}${dLine(101)}
+
+  <!-- target ref + 100 label -->
+  ${refLine}
+
+  <!-- gradient fill -->
+  <path d="${areaPath}" fill="url(#${gradId})"/>
+
+  <!-- curve shadow -->
+  <polyline points="${pts.join(' ')}" fill="none" stroke="${color}"
+    stroke-width="3" stroke-linejoin="round" stroke-linecap="round" opacity="0.25"/>
+
+  <!-- curve line -->
+  <polyline points="${pts.join(' ')}" fill="none" stroke="${color}"
+    stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <!-- 2.0x cap label -->
+  ${capLabel}
+
+  <!-- marker dot -->
+  <g filter="url(#profDotShadow)">${markerDot}</g>
+  ${tooltip}
+
+  <!-- axes -->
+  <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top + chartH}"
+    stroke="#CCCCCC" stroke-width="1.2"/>
+  <line x1="${PAD.left}" y1="${PAD.top + chartH}" x2="${PAD.left + chartW}" y2="${PAD.top + chartH}"
+    stroke="#CCCCCC" stroke-width="1.2"/>
+
+  <!-- x ticks -->
+  ${xTicks}
+
+  <!-- caption -->
+  ${caption}
+</svg>`;
+}
+
+
+function buildCurveSvg(curve, currentAchPct, color, forceXStep) {
+  // ── Dimensions ──────────────────────────────────────────────────────
+  const W = 460, H = 240;
+  const PAD = { top: 24, right: 24, bottom: 44, left: 52 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+ 
+  // ── Dynamic X/Y range from actual curve data ─────────────────────────
+  // X: start at 0, end just past the last finite band boundary
+  const visXMin = 0;
+  const lastFinite = [...curve].reverse().find(b => b.max < 90);
+  const dataXMax  = lastFinite ? lastFinite.max : 2.0;
+  // Add 10% right-padding so the flat cap section is clearly visible
+  const visXMax   = dataXMax + dataXMax * 0.10;
+ 
+  // Y: 0 up to max payout with 15% headroom
+  const dataPFMax = Math.max(...curve.map(b => b.maxP));
+  const visYMax   = dataPFMax + dataPFMax * 0.15;
+ 
+  const xScale = v => PAD.left + ((v - visXMin) / (visXMax - visXMin)) * chartW;
+  const yScale = v => PAD.top  + chartH - (v / visYMax) * chartH;
+ 
+  // ── X-axis tick interval ─────────────────────────────────────────────
+  // If a step is forced (e.g. 0.20 for Offer/Account Growth), use it directly.
+  // Otherwise auto-pick a nice step giving ~5–10 ticks.
+  let xStep;
+  if (forceXStep) {
+    xStep = forceXStep;
+  } else {
+    const rawStep   = (visXMax - visXMin) / 7;
+    const niceSteps = [0.1, 0.2, 0.25, 0.5];
+    xStep = niceSteps.find(s => s >= rawStep) || 0.5;
+  }
+ 
+  // ── Y-axis tick interval ─────────────────────────────────────────────
+  const yStep = visYMax <= 2.5 ? 0.5 : 1.0;
+ 
+  // ── Colour palette for band zones ───────────────────────────────────
+  // Zero zone = light red tint, ramp zones = amber→green, cap = blue tint
+  const bandZoneColors = ['#FDEAED','#FEF3DC','#F4F4F4','#E6F7ED','#E6F2FA','#F0FAE8'];
+ 
+  // ── Band zone background rects ───────────────────────────────────────
+  const bandZones = curve.map((band, i) => {
+    const x1 = xScale(Math.max(band.min, visXMin));
+    const x2 = xScale(Math.min(band.max >= 90 ? visXMax : band.max, visXMax));
+    if (x2 <= x1) return '';
+    const zColor = bandZoneColors[Math.min(i, bandZoneColors.length - 1)];
+    return `<rect x="${x1.toFixed(1)}" y="${PAD.top}" width="${(x2-x1).toFixed(1)}" height="${chartH}" fill="${zColor}" opacity="0.55"/>`;
+  }).join('');
+ 
+  // ── Band boundary vertical lines ────────────────────────────────────
+  const bandLines = curve.slice(0, -1).map(band => {
+    if (band.max >= 90 || band.max > visXMax) return '';
+    const bx = xScale(band.max);
+    return `<line x1="${bx.toFixed(1)}" y1="${PAD.top}" x2="${bx.toFixed(1)}" y2="${PAD.top + chartH}"
+      stroke="#D9D9D9" stroke-width="1" stroke-dasharray="4,3"/>`;
+  }).join('');
+ 
+  // ── Grid lines ───────────────────────────────────────────────────────
+  const xGridLines = [], xLabels = [];
+  for (let v = 0; v <= visXMax + xStep * 0.01; v = Math.round((v + xStep) * 100) / 100) {
+    if (v > visXMax + 0.001) break;
+    const gx = xScale(v).toFixed(1);
+    xGridLines.push(`<line x1="${gx}" y1="${PAD.top}" x2="${gx}" y2="${PAD.top + chartH}" stroke="#E5E7EB" stroke-width="0.75"/>`);
+    xLabels.push(`<text x="${gx}" y="${PAD.top + chartH + 16}" text-anchor="middle" font-size="10" font-family="'Segoe UI',system-ui,sans-serif" fill="#6B7280">${(v*100).toFixed(0)}%</text>`);
+  }
+ 
+  const yGridLines = [], yLabels = [];
+  for (let v = 0; v <= visYMax + yStep * 0.01; v = Math.round((v + yStep) * 10) / 10) {
+    if (v > visYMax + 0.001) break;
+    const gy = yScale(v).toFixed(1);
+    yGridLines.push(`<line x1="${PAD.left}" y1="${gy}" x2="${PAD.left + chartW}" y2="${gy}" stroke="#E5E7EB" stroke-width="0.75"/>`);
+    yLabels.push(`<text x="${PAD.left - 8}" y="${(parseFloat(gy)+3.5).toFixed(1)}" text-anchor="end" font-size="10" font-family="'Segoe UI',system-ui,sans-serif" fill="#6B7280">${v.toFixed(1)}x</text>`);
+  }
+ 
+  // ── 100% achievement reference line ─────────────────────────────────
+  const ref100x = xScale(1.0).toFixed(1);
+  const refLine = `<line x1="${ref100x}" y1="${PAD.top}" x2="${ref100x}" y2="${PAD.top + chartH}"
+    stroke="${color}" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.5"/>
+    <text x="${ref100x}" y="${PAD.top - 5}" text-anchor="middle" font-size="9"
+    font-family="'Segoe UI',system-ui,sans-serif" fill="${color}" font-weight="600" opacity="0.8">Target</text>`;
+ 
+  // ── Curve polyline points (200 samples for smoothness) ───────────────
+  const pts = [];
+  const steps = 200;
+  for (let i = 0; i <= steps; i++) {
+    const x   = visXMin + (visXMax - visXMin) * i / steps;
+    const pfV = calcPfFromCurve(x, curve);
+    pts.push(`${xScale(x).toFixed(1)},${yScale(pfV).toFixed(1)}`);
+  }
+ 
+  // ── Gradient-filled area under curve ─────────────────────────────────
+  // Unique ID to avoid collisions when multiple SVGs are on page
+  const gradId = 'cg_' + color.replace('#','');
+  const areaFirst = pts[0].split(',')[0];
+  const areaLast  = pts[pts.length - 1].split(',')[0];
+  const areaPath  = `M${areaFirst},${yScale(0).toFixed(1)} L${pts.join(' L')} L${areaLast},${yScale(0).toFixed(1)} Z`;
+ 
+  // ── Current position marker (with callout tooltip box) ───────────────
+  let markerHtml = '';
+  if (currentAchPct !== null) {
+    const mx    = currentAchPct / 100;
+    const clampX = Math.min(Math.max(mx, visXMin), visXMax);
+    const pfVal = calcPfFromCurve(clampX, curve);
+    const cx    = parseFloat(xScale(clampX).toFixed(1));
+    const cy    = parseFloat(yScale(pfVal).toFixed(1));
+ 
+    // Callout box: flip to left if too close to right edge
+    const boxW = 72, boxH = 28, boxR = 5;
+    const tipX = (cx + boxW + 14 > PAD.left + chartW) ? cx - boxW - 10 : cx + 10;
+    const tipY = Math.max(PAD.top + 4, cy - boxH / 2);
+ 
+    // Outer glow ring
+    markerHtml = `
+      <line x1="${cx}" y1="${PAD.top}" x2="${cx}" y2="${PAD.top + chartH}"
+        stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/>
+      <circle cx="${cx}" cy="${cy}" r="10" fill="#F59E0B" opacity="0.18"/>
+      <circle cx="${cx}" cy="${cy}" r="6"  fill="#F59E0B" stroke="white" stroke-width="2"/>
+      <circle cx="${cx}" cy="${cy}" r="2.5" fill="white"/>
+      <rect x="${tipX}" y="${tipY}" width="${boxW}" height="${boxH}" rx="${boxR}"
+        fill="#333333" opacity="0.90"/>
+      <text x="${tipX + boxW/2}" y="${tipY + 11}" text-anchor="middle"
+        font-size="9" font-family="'Segoe UI',system-ui,sans-serif" fill="#FFFFFF" font-weight="600">
+        Ach: ${(currentAchPct).toFixed(1)}%
+      </text>
+      <text x="${tipX + boxW/2}" y="${tipY + 22}" text-anchor="middle"
+        font-size="9" font-family="'Segoe UI',system-ui,sans-serif" fill="#F5A623" font-weight="700">
+        PF: ${(pfVal).toFixed(2)}x
+      </text>`;
+  }
+ 
+  // ── Axis labels ──────────────────────────────────────────────────────
+  const xAxisLabel = `<text x="${PAD.left + chartW/2}" y="${H - 4}" text-anchor="middle"
+    font-size="10" font-family="'Segoe UI',system-ui,sans-serif" fill="#7A7A7A" font-weight="500">Achievement %</text>`;
+  const yAxisLabel = `<text x="10" y="${PAD.top + chartH/2}" text-anchor="middle"
+    font-size="10" font-family="'Segoe UI',system-ui,sans-serif" fill="#7A7A7A" font-weight="500"
+    transform="rotate(-90,10,${PAD.top + chartH/2})">Payout Factor</text>`;
+ 
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" id="curveSvg" style="overflow:visible">
+  <defs>
+    <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="${color}" stop-opacity="0.30"/>
+      <stop offset="70%"  stop-color="${color}" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0.00"/>
+    </linearGradient>
+    <filter id="curveShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="${color}" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+ 
+  <!-- Chart background -->
+  <rect x="${PAD.left}" y="${PAD.top}" width="${chartW}" height="${chartH}"
+    fill="white" rx="0"/>
+ 
+  <!-- Band zone backgrounds -->
+  ${bandZones}
+ 
+  <!-- Grid lines -->
+  ${xGridLines.join('')}
+  ${yGridLines.join('')}
+ 
+  <!-- Band boundary lines -->
+  ${bandLines}
+ 
+  <!-- 100% target reference line -->
+  ${refLine}
+ 
+  <!-- Area fill -->
+  <path d="${areaPath}" fill="url(#${gradId})"/>
+ 
+  <!-- Curve line with drop shadow -->
+  <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="3"
+    stroke-linejoin="round" stroke-linecap="round" filter="url(#curveShadow)"/>
+ 
+  <!-- Crisp curve on top -->
+  <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"
+    stroke-linejoin="round" stroke-linecap="round"/>
+ 
+  <!-- Current position marker -->
+  ${markerHtml}
+ 
+  <!-- Axes -->
+  <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top + chartH}"
+    stroke="#7A7A7A" stroke-width="1.5"/>
+  <line x1="${PAD.left}" y1="${PAD.top + chartH}" x2="${PAD.left + chartW}" y2="${PAD.top + chartH}"
+    stroke="#7A7A7A" stroke-width="1.5"/>
+ 
+  <!-- Axis tick marks -->
+  ${xLabels.join('')}
+  ${yLabels.join('')}
+ 
+  <!-- Axis labels -->
+  ${xAxisLabel}
+  ${yAxisLabel}
+</svg>`;
+}
+ 
+function calcPfFromCurve(ratio, curve) {
+  for (const band of curve) {
+    if (ratio >= band.min && ratio < band.max) {
+      if (band.rate === 0) return band.minP;
+      const progress = (ratio - band.min) / (band.max - band.min);
+      return band.minP + progress * (band.maxP - band.minP);
+    }
+  }
+  return curve[curve.length - 1].maxP;
+}
+ 
+// ═══════════════════════════════════════════
+//  PROFITABILITY KPI — DEDICATED FORMULA
+//  IF(Achievement<=(Target-1), 0,
+//     IF(Achievement>=(Target+1), 2,
+//        (1-(Target-Achievement))))
+// ═══════════════════════════════════════════
+function calcProfitabilityPF(target, achievement) {
+  if (target === 0) return 0;
+  if (achievement <= target - 1) return 0;
+  if (achievement >= target + 1) return 2;
+  return 1 - (target - achievement);
+}
+ 
+function getPayoutFactor(achievementPct, curveName) {
+  const curve = cfg.curves[curveName];
+  if (!curve) return 0;
+  const pct = achievementPct / 100; // convert to ratio
+  for (const band of curve) {
+    if (pct >= band.min && pct < band.max) {
+      if (band.rate === 0) return band.minP;
+      const progress = (pct - band.min) / (band.max - band.min);
+      return band.minP + progress * (band.maxP - band.minP);
+    }
+  }
+  const last = curve[curve.length - 1];
+  return last.maxP;
+}
+ 
+// ═══════════════════════════════════════════
+//  SIP TARGET INCENTIVE AMOUNT CALCULATION
+//  Pro-rates each variable segment monthly and sums
+// ═══════════════════════════════════════════
+function calcSipTarget() {
+  // ── Read inputs ──
+  const startDay   = parseInt(document.getElementById('startDay')?.value)   || 1;
+  const startMonth = parseInt(document.getElementById('startMonth')?.value) || 1; // 1-based
+  const var0  = parseFloat(document.getElementById('sipVar0')?.value)  || 0;
+  const var1  = parseFloat(document.getElementById('sipVar1')?.value)  || 0;
+  const rev1m = parseInt(document.getElementById('sipVar1Month')?.value) || 0; // month Rev1 starts (1-based)
+  const var2  = parseFloat(document.getElementById('sipVar2')?.value)  || 0;
+  const rev2m = parseInt(document.getElementById('sipVar2Month')?.value) || 0; // month Rev2 starts (1-based)
+ 
+  if (!var0) return 0; // nothing to compute
+ 
+  // ── End month: 6 (30 Jun) for H1 YTD, 12 (31 Dec) for Full Year ──
+  const cycle    = document.getElementById('payoutCycle')?.value || '';
+  const endMonth = cycle === 'H1 YTD' ? 6 : 12;
+ 
+  // ── Build monthly weight slots (index 0 = Jan … 11 = Dec) ──
+  // Months before SIP Start or after endMonth get weight 0.
+  // SIP Start month gets a partial weight if start day > 1.
+  // All other active months get full weight (1.0).
+ 
+  const year         = parseInt(cfg?.general?.year) || new Date().getFullYear();
+  const monthWeights = Array(12).fill(0);
+ 
+  for (let m = 1; m <= endMonth; m++) {
+    if (m < startMonth) continue; // before SIP start — skip
+ 
+    if (m === startMonth) {
+      // Partial month: days from startDay to end of month
+      const daysInMonth = new Date(year, m, 0).getDate();
+      const activeDays  = daysInMonth - startDay + 1;
+      monthWeights[m - 1] = activeDays / daysInMonth;
+    } else {
+      monthWeights[m - 1] = 1.0; // full month
+    }
+  }
+ 
+  // ── Accumulate: pick the right variable rate for each month ──
+  // Segment 0: startMonth … rev1m-1  (or endMonth if no Rev1)
+  // Segment 1: rev1m      … rev2m-1  (or endMonth if no Rev2)
+  // Segment 2: rev2m      … endMonth
+ 
+  let total = 0;
+  for (let m = 1; m <= endMonth; m++) {
+    const w = monthWeights[m - 1];
+    if (w === 0) continue;
+ 
+    let monthlyRate;
+    if (rev1m && m >= rev1m && rev2m && m >= rev2m) {
+      // Segment 2
+      monthlyRate = var2 / 12;
+    } else if (rev1m && m >= rev1m) {
+      // Segment 1
+      monthlyRate = var1 / 12;
+    } else {
+      // Segment 0
+      monthlyRate = var0 / 12;
+    }
+ 
+    total += monthlyRate * w;
+  }
+ 
+  return total;
+}
+ 
+function updateCalc() {
+  cfg = loadConfig();
+  const cycle = document.getElementById('payoutCycle').value;
+  document.getElementById('metaCycle').textContent = cycle;
+  const isH1 = cycle === 'H1 YTD';
+ 
+  const targets = document.querySelectorAll('.kpi-target');
+  const achs    = document.querySelectorAll('.kpi-ach');
+ 
+  let overallWeightedFactor = 0;
+  let totalWeight = 0;
+  let inputOk = true; // false if any named row has blank target or achievement
+ 
+  _kpiRows.forEach((row, i) => {
+    if (!row.name || !row.curve) {
+      const achEl = document.getElementById('achPct' + i);
+      const pfEl  = document.getElementById('pf' + i);
+      if (achEl) achEl.textContent = '—';
+      if (pfEl)  pfEl.textContent  = '—';
+      return;
+    }
+ 
+    const tRaw = targets[i]?.value?.trim();
+    const aRaw = achs[i]?.value?.trim();
+ 
+    // Flag blank inputs — highlight the cell red
+    const tBlank = tRaw === '' || tRaw === undefined;
+    const aBlank = aRaw === '' || aRaw === undefined;
+    if (tBlank || aBlank) inputOk = false;
+ 
+    // Visually flag blank input cells
+    if (targets[i]) targets[i].style.borderColor = tBlank ? 'var(--red)' : '';
+    if (achs[i])    achs[i].style.borderColor    = aBlank ? 'var(--red)' : '';
+ 
+    const t = parseFloat(tRaw) || 0;
+    const a = parseFloat(aRaw) || 0;
+    const achPct = t !== 0 ? (a / t) * 100 : 0;
+ 
+    // Profitability KPI: dedicated formula on raw values; H1 policy forces 0
+    const isProfit = row.curve === 'Profitability Curve';
+    let pf;
+    if (isH1 && isProfit) {
+      pf = 0;
+    } else if (isProfit) {
+      pf = calcProfitabilityPF(t, a);
+    } else {
+      pf = getPayoutFactor(achPct, row.curve);
+    }
+ 
+    overallWeightedFactor += pf * row.weight;
+    totalWeight += row.weight;
+ 
+    const achEl = document.getElementById('achPct' + i);
+    const pfEl  = document.getElementById('pf' + i);
+    if (achEl) achEl.textContent = achPct !== null && achPct !== undefined ? achPct.toFixed(1) + '%' : '—';
+    if (pfEl) {
+      pfEl.textContent  = (isH1 && isProfit) ? '0.0% 📋' : (pf * 100).toFixed(1) + '%';
+      pfEl.style.color  = (isH1 && isProfit) ? '#007A3D' : '';
+      pfEl.style.fontStyle = (isH1 && isProfit) ? 'italic' : '';
+    }
+  });
+ 
+  const totalWeightPct = Math.round(totalWeight * 100); // e.g. 100
+  const weightOk = totalWeightPct === 100;
+ 
+  // Update tfoot weight display — red when not 100%
+  const totalWeightEl = document.getElementById('totalWeight');
+  if (totalWeightEl) {
+    totalWeightEl.textContent = totalWeight > 0 ? totalWeightPct + '%' : '—';
+    totalWeightEl.style.color = weightOk ? 'var(--navy)' : 'var(--red)';
+    totalWeightEl.style.fontWeight = weightOk ? '700' : '800';
+  }
+ 
+  // Weight error notice
+  const weightErr = document.getElementById('weightErrorNotice');
+  if (weightErr) weightErr.style.display = (!weightOk && totalWeight > 0) ? 'block' : 'none';
+ 
+  // Incomplete input notice
+  const inputErr = document.getElementById('incompleteInputNotice');
+  if (inputErr) inputErr.style.display = (!inputOk && weightOk) ? 'block' : 'none';
+ 
+  // Block all results if weights don't sum to 100%
+  const resultsGrid = document.getElementById('resultsGrid');
+  if (resultsGrid) resultsGrid.style.opacity = (weightOk && inputOk) ? '1' : '0.35';
+ 
+  if (!weightOk) {
+    // Reset displays
+    document.getElementById('applicableFactor').textContent = '—';
+    document.getElementById('factorBar').style.width        = '0%';
+    document.getElementById('factorBar').className          = 'factor-bar-fill';
+    const _sp1 = document.getElementById('factorSplit'); if(_sp1) _sp1.style.display='none';
+    const _pf1 = document.getElementById('payoutFactor'); if(_pf1) _pf1.textContent='—';
+    const _srf1 = document.getElementById('splitRawFactor'); if(_srf1) _srf1.textContent='—';
+    const _saf1 = document.getElementById('splitApplicableFactor'); if(_saf1) _saf1.textContent='—';
+    const _pl1 = document.getElementById('factorLabelText'); if(_pl1) _pl1.textContent='Adjust KPI weights to total 100% to see results';
+    const _pi1 = document.getElementById('factorStatusPill'); if(_pi1){_pi1.textContent='Awaiting Input';_pi1.className='factor-status-pill zero';}
+    const _ic1 = document.getElementById('factorIcon'); if(_ic1) _ic1.textContent='🎯';
+    document.getElementById('targetAmount').textContent     = (cfg.general.currency || '₹') + ' —';
+    document.getElementById('payoutAmount').textContent     = (cfg.general.currency || '₹') + ' —';
+    document.getElementById('h1CapNotice').style.display    = 'none';
+    if (inputErr) inputErr.style.display = 'none';
+    return;
+  }
+ 
+  if (!inputOk) {
+    // Reset displays
+    document.getElementById('applicableFactor').textContent = '—';
+    document.getElementById('factorBar').style.width        = '0%';
+    document.getElementById('factorBar').className          = 'factor-bar-fill';
+    const _sp2 = document.getElementById('factorSplit'); if(_sp2) _sp2.style.display='none';
+    const _pf2 = document.getElementById('payoutFactor'); if(_pf2) _pf2.textContent='—';
+    const _srf2 = document.getElementById('splitRawFactor'); if(_srf2) _srf2.textContent='—';
+    const _saf2 = document.getElementById('splitApplicableFactor'); if(_saf2) _saf2.textContent='—';
+    const _pl2 = document.getElementById('factorLabelText'); if(_pl2) _pl2.textContent='Complete all Target and Achievement inputs to see results';
+    const _pi2 = document.getElementById('factorStatusPill'); if(_pi2){_pi2.textContent='Awaiting Input';_pi2.className='factor-status-pill zero';}
+    const _ic2 = document.getElementById('factorIcon'); if(_ic2) _ic2.textContent='🎯';
+    document.getElementById('targetAmount').textContent     = (cfg.general.currency || '₹') + ' —';
+    document.getElementById('payoutAmount').textContent     = (cfg.general.currency || '₹') + ' —';
+    document.getElementById('h1CapNotice').style.display    = 'none';
+    return;
+  }
+ 
+  // ── All good: weights = 100%, all inputs filled ──────────────
+  if (inputErr) inputErr.style.display = 'none';
+ 
+  // Raw weighted factor (no normalisation needed since weights = 1.0 exactly)
+  const rawPF = overallWeightedFactor;
+ 
+  // H1 cap at 100%
+  const applicablePF = isH1 ? Math.min(rawPF, 1.0) : rawPF;
+  const isCapped = isH1 && rawPF > 1.0;
+ 
+  // H1 cap notification
+  const notice = document.getElementById('h1CapNotice');
+  if (notice) notice.style.display = isCapped ? 'flex' : 'none';
+ 
+  // H1 Profitability notice
+ 
+  // ── Factor display — rich version ──
+  // barMax driven by Sales & Orders Curve last-band maxP (e.g. 3.0 → 300%, 3.5 → 350%)
+  const _salesCurve = cfg.curves['Sales & Orders Curve'] || [];
+  const _salesMax   = _salesCurve.length ? _salesCurve[_salesCurve.length - 1].maxP : 3.0;
+  const barMax   = isH1 ? 1.0 : _salesMax;
+  const barMaxPct = Math.round(barMax * 100) + '%';
+  const midMaxPct = isH1 ? '50%' : '100%';
+ 
+  const barPct   = Math.min((applicablePF / barMax) * 100, 100);
+  const apPct    = (applicablePF * 100).toFixed(1) + '%';
+  const rawPct   = (rawPF * 100).toFixed(1) + '%';
+ 
+  // Milestone labels
+  document.getElementById('midMilestoneLabel').textContent = midMaxPct;
+  document.getElementById('maxMilestoneLabel').textContent = isH1 ? '100%' : barMaxPct;
+ 
+  // Big number
+  document.getElementById('applicableFactor').textContent = apPct;
+ 
+  // Raw / Applicable split row
+  const splitEl = document.getElementById('factorSplit');
+  if (splitEl) splitEl.style.display = 'flex';
+  const _pfEl = document.getElementById('payoutFactor');
+  if (_pfEl) _pfEl.textContent = rawPct;
+  document.getElementById('splitRawFactor').textContent        = rawPct;
+  document.getElementById('splitApplicableFactor').textContent = apPct;
+ 
+  // Progress bar colour class
+  const barEl = document.getElementById('factorBar');
+  barEl.style.width = barPct + '%';
+  barEl.className   = 'factor-bar-fill'
+    + (isCapped             ? ' capped'
+     : applicablePF >= barMax ? ' max'
+     : applicablePF >= 0.5  ? ' great' : '');
+ 
+  // Status pill + icon
+  const pillEl = document.getElementById('factorStatusPill');
+  const iconEl = document.getElementById('factorIcon');
+  const dotEl  = document.getElementById('factorDot');
+  if (isCapped) {
+    pillEl.textContent = '🔒 Capped at 100%';
+    pillEl.className   = 'factor-status-pill capped';
+    if (iconEl) iconEl.textContent = '🔒';
+    if (dotEl)  { dotEl.className = 'dot orange'; }
+  } else if (applicablePF >= barMax) {
+    pillEl.textContent = '🏆 At Maximum Cap';
+    pillEl.className   = 'factor-status-pill max';
+    if (iconEl) iconEl.textContent = '🏆';
+    if (dotEl)  { dotEl.className = 'dot'; dotEl.style.background='#F59E0B'; }
+  } else if (Math.round(applicablePF * 1000) === 1000) {
+    // Exactly 100.0%
+    pillEl.textContent = '🎯 On Target';
+    pillEl.className   = 'factor-status-pill great';
+    if (iconEl) iconEl.textContent = '🎯';
+    if (dotEl)  { dotEl.className = 'dot'; dotEl.style.background='var(--green)';}
+  } else if (applicablePF > 1.0) {
+    pillEl.textContent = '🚀 Above Target';
+    pillEl.className   = 'factor-status-pill great';
+    if (iconEl) iconEl.textContent = '🚀';
+    if (dotEl)  { dotEl.className = 'dot'; dotEl.style.background='';}
+  } else if (applicablePF > 0) {
+    pillEl.textContent = '📊 Below Target';
+    pillEl.className   = 'factor-status-pill good';
+    if (iconEl) iconEl.textContent = '📊';
+    if (dotEl)  { dotEl.className = 'dot gray'; dotEl.style.background='var(--blue)'; }
+  } else {
+    pillEl.textContent = 'No Payout';
+    pillEl.className   = 'factor-status-pill zero';
+    if (iconEl) iconEl.textContent = '🎯';
+    if (dotEl)  { dotEl.className = 'dot gray'; dotEl.style.background=''; }
+  }
+ 
+  // Label text
+  const labelText = document.getElementById('factorLabelText');
+  if (labelText) labelText.textContent = isCapped
+    ? 'Raw factor exceeds 100% — capped at 100% for H1 YTD payout'
+    : applicablePF >= barMax  ? 'At maximum payout cap — outstanding performance'
+    : isH1 && applicablePF >= 1.0 ? 'At H1 maximum (100%) — excellent result'
+    : `${barPct.toFixed(0)}% of the ${isH1 ? '100%' : barMaxPct} cap`;
+ 
+  // ── Rev 2 partial-fill validation ──
+  const _var2val  = (document.getElementById('sipVar2')?.value || '').trim();
+  const _rev2mval = (document.getElementById('sipVar2Month')?.value || '').trim();
+  const _inp2el   = document.getElementById('sipVar2');
+  const _sel2el   = document.getElementById('sipVar2Month');
+  const _rev2Notice = document.getElementById('sipVar2IncompleteNotice');
+  const rev2Partial = (_var2val !== '' && !_rev2mval) || (_rev2mval !== '' && _var2val === '');
+ 
+  if (_inp2el) _inp2el.style.borderColor = (rev2Partial && _var2val === '') ? 'var(--red)' : '';
+  if (_sel2el) _sel2el.style.borderColor = (rev2Partial && !_rev2mval)      ? 'var(--red)' : '';
+  if (_rev2Notice) _rev2Notice.style.display = rev2Partial ? 'flex' : 'none';
+ 
+  if (rev2Partial) {
+    document.getElementById('targetAmount').textContent = (cfg.general.currency || '₹') + ' —';
+    document.getElementById('payoutAmount').textContent = (cfg.general.currency || '₹') + ' —';
+    document.getElementById('payoutBox').className = 'result-box result-payout zero';
+    if (resultsGrid) resultsGrid.style.opacity = '0.35';
+    return;
+  }
+ 
+  // Payout amounts — use pro-rated SIP Target instead of raw var0
+  const sipTarget = calcSipTarget();
+  const c         = cfg.general.currency || '₹';
+  document.getElementById('targetAmount').textContent = c + ' ' + (sipTarget === 0 ? '0.00' : sipTarget.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}));
+  const _payoutVal = sipTarget * applicablePF; document.getElementById('payoutAmount').textContent = c + ' ' + (_payoutVal === 0 ? '0.00' : _payoutVal.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}));
+ 
+  const payoutBox = document.getElementById('payoutBox');
+  payoutBox.className = 'result-box result-payout' + (sipTarget * applicablePF === 0 ? ' zero' : '');
+}
+ 
+function formatNum(n) {
+  if (n === 0) return '0';
+  return Math.round(n).toLocaleString('en-IN');
+}
+ 
+// ═══════════════════════════════════════════
+//  MASTER VIEW
+// ═══════════════════════════════════════════
+function initMasterPage() {
+  cfg = loadConfig();
+  renderMasterPlans();
+  renderPlanMapping();
+  renderKpiConfig();
+  renderCurveTables();
+  renderGeneralSettings();
+}
+ 
+function renderMasterPlans() {
+  const container = document.getElementById('masterPlanList');
+  container.innerHTML = '';
+  cfg.plans.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'plan-chip' + (p.active ? ' selected' : '');
+    chip.textContent = p.id;
+    chip.onclick = () => {
+      cfg.plans[i].active = !cfg.plans[i].active;
+      chip.classList.toggle('selected');
+      updateActiveBadge();
+    };
+    container.appendChild(chip);
+  });
+  updateActiveBadge();
+}
+ 
+function updateActiveBadge() {
+  const n = cfg.plans.filter(p => p.active).length;
+  document.getElementById('activePlansBadge').textContent = n + ' active';
+}
+ 
+function renderPlanMapping() {
+  const tbody = document.getElementById('planMappingBody');
+  tbody.innerHTML = '';
+  const planTypes = Object.keys(cfg.planKpis);
+  planTypes.forEach(pType => {
+    const kpis = cfg.planKpis[pType];
+    const tr = document.createElement('tr');
+    let cells = `<td><strong>${pType}</strong></td>`;
+    for (let i = 0; i < 3; i++) {
+      const k = kpis[i];
+      cells += k
+        ? `<td>${k.name}</td><td>${(k.weight*100).toFixed(0)}%</td>`
+        : `<td>—</td><td>—</td>`;
+    }
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  });
+}
+ 
+function renderKpiConfig() {
+  const container = document.getElementById('kpiConfigBlocks');
+  container.innerHTML = '';
+  const planTypes = Object.keys(cfg.planKpis);
+  planTypes.forEach(pType => {
+    const kpis = cfg.planKpis[pType];
+    const block = document.createElement('div');
+    block.style.marginBottom = '24px';
+    block.innerHTML = `<div class="master-section-title">${pType}</div>`;
+    kpis.forEach((k, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:grid;grid-template-columns:1fr auto 1fr;gap:12px;margin-bottom:10px;align-items:end';
+      row.innerHTML = `
+        <div>
+          <div class="field-label">KPI Name</div>
+          <input type="text" value="${k.name}" data-plan="${pType}" data-idx="${i}" data-field="name" onchange="updateKpiConfig(this)">
+        </div>
+        <div>
+          <div class="field-label">Weight</div>
+          <input type="number" value="${(k.weight*100).toFixed(0)}" data-plan="${pType}" data-idx="${i}" data-field="weight" step="5" min="0" max="100" onchange="updateKpiConfig(this)" style="width:70px">
+        </div>
+        <div>
+          <div class="field-label">Payout Curve</div>
+          <select data-plan="${pType}" data-idx="${i}" data-field="curve" onchange="updateKpiConfigSel(this)">
+            ${Object.keys(cfg.curves).map(c => `<option ${c===k.curve?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>`;
+      block.appendChild(row);
+    });
+    container.appendChild(block);
+  });
+}
+ 
+function updateKpiConfig(el) {
+  const plan = el.dataset.plan, idx = parseInt(el.dataset.idx), field = el.dataset.field;
+  if (field === 'weight') cfg.planKpis[plan][idx].weight = parseFloat(el.value) / 100;
+  else cfg.planKpis[plan][idx][field] = el.value;
+}
+function updateKpiConfigSel(el) {
+  cfg.planKpis[el.dataset.plan][parseInt(el.dataset.idx)].curve = el.value;
+}
+ 
+function renderCurveTables() {
+  renderOneCurve('Sales & Orders Curve', 'salesCurveBody');
+  renderOneCurve('Segment OB Curve', 'segmentCurveBody');
+  renderOneCurve('Profitability Curve', 'profCurveBody');
+  renderOneCurve('Performance Payout Curve', 'perfCurveBody');
+}
+ 
+function renderOneCurve(curveName, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = '';
+  const bands = cfg.curves[curveName] || [];
+  bands.forEach((band, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><input type="number" value="${band.min}" data-curve="${curveName}" data-idx="${i}" data-field="min" onchange="updateCurve(this)" step="0.01"></td>
+      <td><input type="number" value="${band.max}" data-curve="${curveName}" data-idx="${i}" data-field="max" onchange="updateCurve(this)" step="0.01"></td>
+      <td><input type="number" value="${band.minP}" data-curve="${curveName}" data-idx="${i}" data-field="minP" onchange="updateCurve(this)" step="0.1"></td>
+      <td><input type="number" value="${band.maxP}" data-curve="${curveName}" data-idx="${i}" data-field="maxP" onchange="updateCurve(this)" step="0.1"></td>
+      <td><input type="number" value="${band.rate}" data-curve="${curveName}" data-idx="${i}" data-field="rate" onchange="updateCurve(this)" step="0.1" style="background:var(--gray-100)"></td>`;
+    tbody.appendChild(tr);
+  });
+}
+ 
+function updateCurve(el) {
+  const curve = el.dataset.curve, idx = parseInt(el.dataset.idx), field = el.dataset.field;
+  if (!cfg.curves[curve]) return;
+  cfg.curves[curve][idx][field] = parseFloat(el.value);
+}
+ 
+function renderGeneralSettings() {
+  const g = cfg.general;
+  document.getElementById('cfgYear').value = g.year || '';
+  document.getElementById('cfgZone').value = g.zone || '';
+  document.getElementById('cfgH1End').value = g.h1End || '';
+  document.getElementById('cfgH2End').value = g.h2End || '';
+  document.getElementById('cfgSimPeriod').value = g.simPeriod || 3;
+  document.getElementById('cfgCurrency').value = g.currency || '₹';
+}
+ 
+function selectAllPlans() { cfg.plans.forEach(p => p.active = true); renderMasterPlans(); }
+function deselectAllPlans() { cfg.plans.forEach(p => p.active = false); renderMasterPlans(); }
+ 
+// ═══════════════════════════════════════════
+//  SAVE
+// ═══════════════════════════════════════════
+function saveSettings(section) {
+  if (section === 'general') {
+    const newYear = document.getElementById('cfgYear').value || '2026';
+    cfg.general.year      = newYear;
+    cfg.general.zone      = document.getElementById('cfgZone').value;
+    // Auto-update h1End/h2End if they still carry the old year, or if blank
+    const rawH1 = document.getElementById('cfgH1End').value.trim();
+    const rawH2 = document.getElementById('cfgH2End').value.trim();
+    cfg.general.h1End     = rawH1 || ('30-Jun-' + newYear);
+    cfg.general.h2End     = rawH2 || ('31-Dec-' + newYear);
+    cfg.general.simPeriod = parseInt(document.getElementById('cfgSimPeriod').value);
+    cfg.general.currency  = document.getElementById('cfgCurrency').value;
+    // Reflect updated dates back into the input fields
+    document.getElementById('cfgH1End').value = cfg.general.h1End;
+    document.getElementById('cfgH2End').value = cfg.general.h2End;
+  }
+  saveConfig(cfg);
+  addAuditLog(section + ' settings updated');
+  showToast('✅ ' + section.charAt(0).toUpperCase() + section.slice(1) + ' settings saved & synced');
+  // Re-apply all labels in client view immediately
+  if (section === 'general') refreshClientView();
+}
+ 
+function addAuditLog(msg) {
+  const log = document.getElementById('auditLog');
+  const entry = document.createElement('div');
+  entry.className = 'update-log';
+  entry.innerHTML = `<span class="time">${new Date().toLocaleString('en-IN')}</span> — ${msg}`;
+  log.insertBefore(entry, log.firstChild);
+}
+ 
+function showToast(msg) {
+  const toast = document.getElementById('saveToast');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+ 
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+window.onload = () => {
+  var _s=document.getElementById("sipPlan");if(_s)_s.value="Non-Segment KAM";
+  refreshClientView();
+  stampNavBadge();
+};
+</script>
+
+
+
+
+
+
+
+
+
+<script id="srcTpl" type="text/plain"><!--SRC_PLACEHOLDER--></script>
+</body>
+</html>
+ 
+
